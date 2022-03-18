@@ -1,8 +1,5 @@
 from peewee import *
-import datetime
 import config
-
-now = datetime.datetime.now
 
 db = PostgresqlDatabase(
     database=config.db_name,
@@ -23,14 +20,16 @@ class BaseModel(Model):
 class User(BaseModel):
     id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
     email = TextField(column_name="email", unique=True)
-    name = TextField(column_name="name", unique=True)
-    surname = TextField(column_name="surname", unique=True)
+    verifiedEmail = BooleanField(column_name="verified_email")
+    name = TextField(column_name="name")
+    surname = TextField(column_name="surname")
     password = TextField(column_name="password", null=True)
     salt = TextField(column_name="salt", null=True)
+    email_token = TextField(column_name="email_token", null=True)
     photo = TextField(column_name="photo", null=True)
-    username = TextField(column_name="username", unique=True, null=True)
-    statusId = IntegerField(column_name="status_id", null=True)
-    registrationTime = DateTimeField(column_name="registration_time", default=now)
+    username = TextField(column_name="username", null=True)
+    statusId = IntegerField(column_name="status_id")
+    registrationTime = DateTimeField(column_name="registration_time", null=True)
     lastLoginTime = DateTimeField(column_name="last_login_time", null=True)
     deletedTime = DateTimeField(column_name="deleted_time", null=True)
 
@@ -70,3 +69,26 @@ class Shop(BaseModel):
 
     class Meta:
         table_name = "shops"
+
+
+class Email_message(BaseModel):
+    id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
+    smtpEmail = TextField(column_name="smtp_email", null=True)
+    recipient = TextField(column_name="recipient", null=True)
+    subject = TextField(column_name="subject", null=True)
+    body = TextField(column_name="body", null=True)
+    date = DateTimeField(column_name="date", null=True)
+
+    class Meta:
+        table_name = "email_messages"
+
+
+class Error(BaseModel):
+    id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
+    error = TextField(column_name="error", null=True)
+    description = TextField(column_name="description", null=True)
+    source = TextField(column_name="source", null=True)
+    date = DateTimeField(column_name="date", null=True)
+
+    class Meta:
+        table_name = "errors"

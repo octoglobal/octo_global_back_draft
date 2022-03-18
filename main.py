@@ -1,22 +1,18 @@
-from flask import Flask, request, jsonify, abort
-from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, JWTManager, get_jwt_identity
+from flask import Flask, request, jsonify
+from flask_jwt_extended import JWTManager
 from flask_cors import CORS
-import requests
-from datetime import datetime, timedelta
-# import json
-# from peewee import fn
-
+from datetime import timedelta
 import config
-# from database import User, Order, News, Shop
+from api import registration_and_authorization
 
 
 app = Flask(__name__)
+app.register_blueprint(registration_and_authorization.reg_and_auth)
 jwt = JWTManager(app)
 CORS(app)
-
 app.config["SECRET_KEY"] = config.flask_secret_key
 app.config["JWT_SECRET_KEY"] = config.jwt_secret_key
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=30)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=40)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=360)
 global_salt = config.global_salt
 
@@ -27,39 +23,5 @@ def version():
         return jsonify({"message": "version 0.001"}), 200
 
 
-@app.route("/registration", methods=["POST"])
-def registration():
-    if request.method == "POST":
-        request_data = request.get_json()
-        try:
-            name = request_data["name"]
-            surname = request_data["surname"]
-            email = request_data["email"]
-        except Exception:
-            return abort(403)
-
-
-
-        return "qweqwe"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
