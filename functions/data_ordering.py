@@ -27,3 +27,10 @@ def get_user_enough_data(user):
     for key in enough_keys:
         enough_user_data[key] = user[key]
     return enough_user_data
+
+
+def check_image_filename(filename):
+    if "." in filename:
+        if filename.rsplit(".", 1)[-1].lower() in config.images_allowed_formats:
+            return True
+    return False

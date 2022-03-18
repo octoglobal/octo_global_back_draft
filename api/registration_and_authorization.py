@@ -63,7 +63,7 @@ def login():
         password = auth.password
         user = User.select().where(User.email == email)
         if not user.exists():
-            return "email not found", 403
+            return "user not found", 403
         user = user.get()
         user.lastLoginTime = datetime.now()
         user.save()
@@ -113,7 +113,7 @@ def send_recovery_message():
             return "invalid data", 422
         user = User.select().where(User.email == email)
         if not user.exists():
-            return "email not found", 403
+            return "user not found", 403
         user = user.get()
         user_id = user.id
         time = datetime.now() - timedelta(minutes=60)
@@ -140,12 +140,13 @@ def mail_confirmation():
             email_token = str(request_data["email_token"])
         except Exception:
             return "invalid data", 422
-        try:
-            user = User.select().where(User.email == email, User.email_token == email_token).get()
-            user.verifiedEmail = True
-            user.save()
-        except Exception:
-            return "internal server error", 500
+        user = User.select().where(User.email == email, User.email_token == email_token)
+        if not user.exists():
+            return "user not found", 403
+        user = user.get()
+        user.verifiedEmail = True
+        user.save()
+
         return jsonify({"message": "mail successfully verified"}), 200
 
 
@@ -161,7 +162,10 @@ def password_change():
         except Exception:
             return "invalid data", 422
         user_id = token_data["user_id"]
-        user = User.select().where(User.id == user_id).get()
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        user = user.get()
         old_privat_salt = user.salt
         db_hashed_password = user.password
         hashed_password = data_ordering.password_hash(old_password, old_privat_salt)
@@ -189,7 +193,10 @@ def password_recovery():
         if not recovery_token_check:
             return "invalid data", 422
         user_id = token_data["user_id"]
-        user = User.select().where(User.id == user_id).get()
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        user = user.get()
         new_privat_salt = uuid.uuid4().hex
         new_hashed_password = data_ordering.password_hash(new_password, new_privat_salt)
         user.password = new_hashed_password
