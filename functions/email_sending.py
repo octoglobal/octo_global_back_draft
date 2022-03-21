@@ -43,13 +43,13 @@ def send_email(recipient, subject, message_text):
 def send_welcome_message(recipient, subject, email_token):
     text = "Приветствие бла бла" \
            "\n\nДля подтверждения почты: " \
-           "\n\nЗдесь будет query: email = " + str(recipient) + " email_token = " + str(email_token)
+           "\n\nСсылка = " + config.front_domain + "/confirm?email=" + str(recipient) + "&token=" + str(email_token)
     return send_email(recipient, subject, text)
 
 
 def send_verification_message(recipient, subject, email_token):
     text = "Для подтверждения почты: " \
-           "\n\nЗдесь будет query: email = " + str(recipient) + " email_token = " + str(email_token)
+           "\n\nСсылка = " + config.front_domain + "/confirm?email=" + str(recipient) + "&token=" + str(email_token)
     return send_email(recipient, subject, text)
 
 

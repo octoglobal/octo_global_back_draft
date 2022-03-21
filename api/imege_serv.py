@@ -1,13 +1,26 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from PIL import Image
 import hashlib
 import os
 from database import User
 from functions import data_ordering
+from functions import images_func
+import config
 
 
 image_serv = Blueprint("image_serv", __name__)
+
+
+@image_serv.route("/image/<image_hash>", methods=["GET"])
+def get_images(image_hash):
+    if request.method == "GET":
+        try:
+            road_to_file = images_func.road_to_file(image_hash)
+            print(road_to_file)
+            return send_file(road_to_file, mimetype="image/gif")
+        except Exception:
+            return "404", 404
 
 
 @image_serv.route("/upload_photos", methods=["POST"])
@@ -39,48 +52,13 @@ def upload_photos():
                     new_filename = image_hash[8:] + ".webp"
                     photo = Image.open(image)
                     photo = photo.convert('RGB')
-                    hash_road = image_hash[0:2] + "/" + image_hash[2:4] + "/" + image_hash[4:6] + "/" + image_hash[6:8]
-                    # save_road = config.upload_folder + "/" + config.post_alias + "/" + hash_road
-
-
-
-                    print(hash_road)
-                    # if not os.path.exists(save_road):
-                    #     os.makedirs(save_road)
-
-
+                    photo.thumbnail(size=(1600, 1600))
+                    hash_road = images_func.save_road(image_hash)
+                    save_road = config.flask_upload_folder + "/" + hash_road
+                    if not os.path.exists(save_road):
+                        os.makedirs(save_road)
+                    photo.save(save_road + "/" + new_filename, optimize=True, quality=80)
+                    photo_roads.append(image_hash)
                 except Exception:
                     photo_roads.append(None)
-
-
-        print(photo_roads)
-        return "123123"
-
-
-
-        new_filename = str(post_id) + file_hash[8:] + ".webp"
-        db_filename = file_hash
-        hash_road = str(file_hash[0:2]) + "/" + str(file_hash[2:4]) + "/" + str(file_hash[4:6]) + "/" + str(file_hash[6:8])
-        save_road = config.upload_folder + "/" + config.post_alias + "/" + hash_road
-
-        if not os.path.exists(save_road):
-            os.makedirs(save_road)
-
-        photo = Image.open(file)
-        photo = photo.convert('RGB')
-        images_functions.resize_thumbnail(photo, 1200, 1200)
-        medium_image = photo.copy()
-        small_image = photo.copy()
-        smallest_image = photo.copy()
-        images_functions.make_watermark(photo)
-        images_functions.resize_thumbnail(medium_image, 950, 500)
-        images_functions.make_watermark(medium_image)
-        images_functions.resize_thumbnail(small_image, 400, 400)
-        images_functions.resize_thumbnail(smallest_image, 150, 150)
-        images_functions.save_image(photo, save_road + "/" + "n" + new_filename, 80)
-        images_functions.save_image(medium_image, save_road + "/" + "m" + new_filename, 80)
-        images_functions.save_image(small_image, save_road + "/" + "s" + new_filename, 80)
-        images_functions.save_image(smallest_image, save_road + "/" + "x" + new_filename, 80)
-        db_road = "1/" + config.post_alias + "/" + post_id + "/n/" + db_filename
-        photos.append(db_road)
-        db_photos.append(db_filename)
+        return jsonify({"photos": photo_roads}), 200

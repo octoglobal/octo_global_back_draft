@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, \
+    set_access_cookies, set_refresh_cookies, unset_jwt_cookies
 from playhouse.shortcuts import model_to_dict
 from datetime import datetime, timedelta
 import uuid
@@ -15,7 +16,9 @@ reg_and_auth = Blueprint("reg_and_auth", __name__)
 def refresh():
     if request.method == "GET":
         access_token = create_access_token(identity=get_jwt_identity())
-        return jsonify({"access_token": access_token}), 200
+        response = jsonify({"message": "success"})
+        set_access_cookies(response, access_token)
+        return response, 200
 
 
 @reg_and_auth.route("/registration", methods=["POST"])
@@ -49,13 +52,13 @@ def registration():
         except Exception:
             return "internal server error", 500
         if not email_sending.send_welcome_message(email, "Добро пожаловать в Octo Global!", email_token):
-            return jsonify({"message": "user successfully created", "send_email": False}), 201
-        return jsonify({"message": "user successfully created", "send_email": True}), 201
+            return jsonify({"message": "user successfully created", "sendEmail": False}), 201
+        return jsonify({"message": "user successfully created", "sendEmail": True}), 201
 
 
-@reg_and_auth.route("/login", methods=["POST"])
+@reg_and_auth.route("/login", methods=["GET"])
 def login():
-    if request.method == "POST":
+    if request.method == "GET":
         auth = request.authorization
         if not auth or not auth.username or not auth.password:
             return "invalid data", 422
@@ -67,10 +70,10 @@ def login():
         user = user.get()
         user.lastLoginTime = datetime.now()
         user.save()
+        privat_salt = user.salt
+        db_hashed_password = user.password
+        user_id = user.id
         user = model_to_dict(user)
-        privat_salt = user["salt"]
-        db_hashed_password = user["password"]
-        user_id = user["id"]
         hashed_password = data_ordering.password_hash(password, privat_salt)
         if db_hashed_password != hashed_password:
             return "wrong password", 403
@@ -78,7 +81,10 @@ def login():
         access_token = create_access_token(identity=identify)
         refresh_token = create_refresh_token(identity=identify)
         enough_user_data = data_ordering.get_user_enough_data(user)
-        return jsonify({"user": enough_user_data, "access_token": access_token, "refresh_token": refresh_token}), 200
+        response = jsonify({"user": enough_user_data})
+        set_access_cookies(response, access_token)
+        set_refresh_cookies(response, refresh_token)
+        return response, 200
 
 
 @reg_and_auth.route("/send_verification_message", methods=["GET"])
@@ -137,7 +143,7 @@ def mail_confirmation():
         request_data = request.get_json()
         try:
             email = str(request_data["email"])
-            email_token = str(request_data["email_token"])
+            email_token = str(request_data["emailToken"])
         except Exception:
             return "invalid data", 422
         user = User.select().where(User.email == email, User.email_token == email_token)
@@ -203,3 +209,10 @@ def password_recovery():
         user.salt = new_privat_salt
         user.save()
         return jsonify({"message": "password successfully recover"}), 200
+
+
+@reg_and_auth.route("/logout", methods=["GET"])
+def logout():
+    response = jsonify({"message": "success"})
+    unset_jwt_cookies(response)
+    return response, 200

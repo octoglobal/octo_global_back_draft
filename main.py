@@ -5,17 +5,23 @@ from datetime import timedelta
 import config
 from api.registration_and_authorization import reg_and_auth
 from api.imege_serv import image_serv
+from api.user import user_api
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path=config.static_url_path)
 app.register_blueprint(reg_and_auth)
 app.register_blueprint(image_serv)
+app.register_blueprint(user_api)
 jwt = JWTManager(app)
-CORS(app)
+CORS(app, supports_credentials=config.supports_credentials)
 app.config["SECRET_KEY"] = config.flask_secret_key
 app.config["JWT_SECRET_KEY"] = config.jwt_secret_key
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=40)
-app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=360)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=config.jwt_access_token_expires_minutes)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=config.jwt_refresh_token_expires_days)
+app.config["JWT_TOKEN_LOCATION"] = [config.jwt_token_location]
+app.config["JWT_COOKIE_SECURE"] = config.jwt_cookie_secure
+app.config["JWT_COOKIE_CSRF_PROTECT"] = config.jwt_cookie_csrf_protect
+app.config["JWT_CSRF_CHECK_FORM"] = config.jwt_csrf_check_form
 global_salt = config.global_salt
 
 
