@@ -14,15 +14,15 @@ from functions.loger import error_log
 
 def send_email(recipient, subject, message_text):
     try:
-        email_smtp_login = config.email_smtp_login
-        email_smtp_password = config.email_smtp_password
+        email_smtp_login = config.smtp_login
+        email_smtp_password = config.smtp_password
         message = MIMEMultipart()
-        message["From"] = email_smtp_login
+        message["From"] = config.smtp_from
         message["To"] = str(recipient)
         message["Subject"] = str(subject)
         text = message_text
         message.attach(MIMEText(text, "plain"))
-        server = smtplib.SMTP_SSL("smtp.mail.ru", 465)
+        server = smtplib.SMTP_SSL(config.smtp_host, config.smtp_port)
         server.login(email_smtp_login, email_smtp_password)
         server.send_message(message)
         server.quit()
@@ -35,6 +35,7 @@ def send_email(recipient, subject, message_text):
         )
         return True
     except Exception as error:
+        print(error)
         error_description = "Адрес: \"" + str(recipient) + "\" на тему: \"" + str(subject) + "\""
         error_log(error, error_description, "Отправка Email")
         return False
