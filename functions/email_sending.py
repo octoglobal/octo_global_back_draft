@@ -1,5 +1,7 @@
 import smtplib
 from datetime import datetime
+from urllib.parse import urlencode
+from collections import OrderedDict
 import mimetypes
 from email import encoders
 from email.mime.base import MIMEBase
@@ -42,20 +44,27 @@ def send_email(recipient, subject, message_text):
 
 
 def send_welcome_message(recipient, subject, email_token):
+    query_string = str(urlencode(OrderedDict(email=recipient, token=email_token)))
+    url = str(config.front_domain + "/confirm?" + query_string)
     text = "Приветствие бла бла" \
            "\n\nДля подтверждения почты: " \
-           "\n\nСсылка = " + config.front_domain + "/confirm?email=" + str(recipient) + "&token=" + str(email_token)
+           "\n\nСсылка = " + url
     return send_email(recipient, subject, text)
 
 
 def send_verification_message(recipient, subject, email_token):
+    query_string = str(urlencode(OrderedDict(email=recipient, token=email_token)))
+    url = str(config.front_domain + "/confirm?" + query_string)
     text = "Для подтверждения почты: " \
-           "\n\nСсылка = " + config.front_domain + "/confirm?email=" + str(recipient) + "&token=" + str(email_token)
+           "\n\nСсылка = " + url
     return send_email(recipient, subject, text)
 
 
 def send_recovery_message(recipient, subject, time, token):
+    query_string = str(urlencode(OrderedDict(token=token)))
+    url = str(config.front_domain + "/reset_password?" + query_string)
     text = "Для смены пароля: " \
            "\n\nПароль можно сменить до: " + str(time) + \
-           "\n\nЗдесь будет query: token = " + str(token)
+           "\n\nДля смены пароля: " \
+           "\n\nСсылка = " + url
     return send_email(recipient, subject, text)

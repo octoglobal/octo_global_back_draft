@@ -186,7 +186,7 @@ def password_change():
 
 
 @reg_and_auth.route("/password_recovery", methods=["POST"])
-@jwt_required()
+@jwt_required(locations=["headers"])
 def password_recovery():
     if request.method == "POST":
         token_data = get_jwt_identity()
