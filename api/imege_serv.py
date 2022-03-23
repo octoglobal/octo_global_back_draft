@@ -14,6 +14,7 @@ image_serv = Blueprint("image_serv", __name__)
 
 @image_serv.route("/image/<image_hash>", methods=["GET"])
 def get_images(image_hash):
+
     if request.method == "GET":
         try:
             road_to_file = images_func.road_to_file(image_hash)
@@ -26,6 +27,7 @@ def get_images(image_hash):
 @image_serv.route("/upload_photos", methods=["POST"])
 # @jwt_required()
 def upload_photos():
+
     if request.method == "POST":
         # token_data = get_jwt_identity()
         # try:

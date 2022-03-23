@@ -20,6 +20,7 @@ class BaseModel(Model):
 class User(BaseModel):
     id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
     email = TextField(column_name="email", unique=True)
+    phone = TextField(column_name="phone", null=True)
     verifiedEmail = BooleanField(column_name="verified_email")
     name = TextField(column_name="name")
     surname = TextField(column_name="surname")
@@ -45,6 +46,15 @@ class Order(BaseModel):
 
     class Meta:
         table_name = "orders"
+
+
+class Users_addresses(BaseModel):
+    id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
+    userId = IntegerField(column_name="user_id", null=True)
+    address = TextField(column_name="address", null=True)
+
+    class Meta:
+        table_name = "users_addresses"
 
 
 class News(BaseModel):

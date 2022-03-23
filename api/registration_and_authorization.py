@@ -14,6 +14,7 @@ reg_and_auth = Blueprint("reg_and_auth", __name__)
 @reg_and_auth.route("/refresh", methods=["GET"])
 @jwt_required(refresh=True)
 def refresh():
+
     if request.method == "GET":
         access_token = create_access_token(identity=get_jwt_identity())
         response = jsonify({"message": "success"})
@@ -23,6 +24,7 @@ def refresh():
 
 @reg_and_auth.route("/registration", methods=["POST"])
 def registration():
+
     if request.method == "POST":
         request_data = request.get_json()
         try:
@@ -58,6 +60,7 @@ def registration():
 
 @reg_and_auth.route("/login", methods=["GET"])
 def login():
+
     if request.method == "GET":
         auth = request.authorization
         if not auth or not auth.username or not auth.password:
@@ -90,6 +93,7 @@ def login():
 @reg_and_auth.route("/send_verification_message", methods=["GET"])
 @jwt_required()
 def send_verification_message():
+
     if request.method == "GET":
         token_data = get_jwt_identity()
         user_id = token_data["user_id"]
@@ -111,6 +115,7 @@ def send_verification_message():
 
 @reg_and_auth.route("/send_recovery_message", methods=["POST"])
 def send_recovery_message():
+
     if request.method == "POST":
         request_data = request.get_json()
         try:
@@ -139,6 +144,7 @@ def send_recovery_message():
 
 @reg_and_auth.route("/mail_confirmation", methods=["POST"])
 def mail_confirmation():
+
     if request.method == "POST":
         request_data = request.get_json()
         try:
@@ -159,6 +165,7 @@ def mail_confirmation():
 @reg_and_auth.route("/password_change", methods=["POST"])
 @jwt_required()
 def password_change():
+
     if request.method == "POST":
         token_data = get_jwt_identity()
         request_data = request.get_json()
@@ -188,6 +195,7 @@ def password_change():
 @reg_and_auth.route("/password_recovery", methods=["POST"])
 @jwt_required(locations=["headers"])
 def password_recovery():
+
     if request.method == "POST":
         token_data = get_jwt_identity()
         request_data = request.get_json()
@@ -213,6 +221,8 @@ def password_recovery():
 
 @reg_and_auth.route("/logout", methods=["GET"])
 def logout():
-    response = jsonify({"message": "success"})
-    unset_jwt_cookies(response)
-    return response, 200
+
+    if request.method == "GET":
+        response = jsonify({"message": "success"})
+        unset_jwt_cookies(response)
+        return response, 200
