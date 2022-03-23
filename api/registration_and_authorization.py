@@ -4,7 +4,7 @@ from flask_jwt_extended import create_access_token, create_refresh_token, jwt_re
 from playhouse.shortcuts import model_to_dict
 from datetime import datetime, timedelta
 import uuid
-from database import User, Email_message
+from database import User, Email_message, Users_addresses
 from functions import data_ordering, email_sending
 
 
@@ -76,13 +76,17 @@ def login():
         privat_salt = user.salt
         db_hashed_password = user.password
         user_id = user.id
-        user = model_to_dict(user)
         hashed_password = data_ordering.password_hash(password, privat_salt)
         if db_hashed_password != hashed_password:
             return "wrong password", 403
         identify = {"user_id": user_id}
         access_token = create_access_token(identity=identify)
         refresh_token = create_refresh_token(identity=identify)
+        user = model_to_dict(user)
+        user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address) \
+            .where(Users_addresses.userId == user_id, Users_addresses.delete != True)\
+            .order_by(Users_addresses.id.desc()).dicts()
+        user["addresses"] = list(user_addresses)
         enough_user_data = data_ordering.get_user_enough_data(user)
         response = jsonify({"user": enough_user_data})
         set_access_cookies(response, access_token)

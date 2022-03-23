@@ -18,6 +18,7 @@ def get_user_enough_data(user):
         "id",
         "email",
         "phone",
+        "addresses",
         "verifiedEmail",
         "name",
         "surname",

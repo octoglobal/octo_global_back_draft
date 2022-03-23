@@ -52,6 +52,9 @@ class Users_addresses(BaseModel):
     id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
     userId = IntegerField(column_name="user_id", null=True)
     address = TextField(column_name="address", null=True)
+    delete = BooleanField(column_name="delete", null=True)
+    createdTime = DateTimeField(column_name="created_time", null=True)
+    deletedTime = DateTimeField(column_name="deleted_time", null=True)
 
     class Meta:
         table_name = "users_addresses"
@@ -63,7 +66,7 @@ class News(BaseModel):
     body = TextField(column_name="body")
     statusId = IntegerField(column_name="status_id", null=True)
     createdTime = DateTimeField(column_name="created_time", null=True)
-    updateTime = DateTimeField(column_name="update_time", null=True)
+    editedTime = DateTimeField(column_name="edited_time", null=True)
 
     class Meta:
         table_name = "news"

@@ -37,7 +37,6 @@ def send_email(recipient, subject, message_text):
         )
         return True
     except Exception as error:
-        print(error)
         error_description = "Адрес: \"" + str(recipient) + "\" на тему: \"" + str(subject) + "\""
         error_log(error, error_description, "Отправка Email")
         return False
