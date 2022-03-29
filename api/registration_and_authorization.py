@@ -83,7 +83,7 @@ def login():
         access_token = create_access_token(identity=identify)
         refresh_token = create_refresh_token(identity=identify)
         user = model_to_dict(user)
-        user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address) \
+        user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address_string) \
             .where(Users_addresses.userId == user_id, Users_addresses.delete != True)\
             .order_by(Users_addresses.id.desc()).dicts()
         user["addresses"] = list(user_addresses)

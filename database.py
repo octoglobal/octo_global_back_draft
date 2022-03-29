@@ -50,8 +50,11 @@ class Order(BaseModel):
 
 class Users_addresses(BaseModel):
     id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
-    userId = IntegerField(column_name="user_id", null=True)
-    address = TextField(column_name="address", null=True)
+    userId = IntegerField(column_name="user_id")
+    phone = TextField(column_name="phone")
+    name = TextField(column_name="name")
+    surname = TextField(column_name="surname")
+    address_string = TextField(column_name="address_string")
     delete = BooleanField(column_name="delete", null=True)
     createdTime = DateTimeField(column_name="created_time", null=True)
     deletedTime = DateTimeField(column_name="deleted_time", null=True)

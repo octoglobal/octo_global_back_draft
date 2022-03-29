@@ -19,7 +19,7 @@ def user_data():
             return "user not found", 403
         user = user.get()
         user = model_to_dict(user)
-        user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address) \
+        user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address_string) \
             .where(Users_addresses.userId == user_id, Users_addresses.delete != True)\
             .order_by(Users_addresses.id.desc()).dicts()
         user["addresses"] = list(user_addresses)
@@ -47,7 +47,7 @@ def user_data():
                 pass
         user.save()
         user = model_to_dict(user)
-        user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address) \
+        user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address_string) \
             .where(Users_addresses.userId == user_id, Users_addresses.delete != True)\
             .order_by(Users_addresses.id.desc()).dicts()
         user["addresses"] = list(user_addresses)
@@ -72,7 +72,7 @@ def address_info():
         Users_addresses.create(userId=user_id, address=address, delete=False, createdTime=datetime.now())
         user = user.get()
         user = model_to_dict(user)
-        user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address) \
+        user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address_string) \
             .where(Users_addresses.userId == user_id, Users_addresses.delete != True)\
             .order_by(Users_addresses.id.desc()).dicts()
         user["addresses"] = list(user_addresses)
@@ -92,7 +92,9 @@ def address_info():
         if not user.exists():
             return "user not found", 403
         address = Users_addresses.select() \
-            .where(Users_addresses.id == address_id, Users_addresses.userId == user_id, Users_addresses.delete != True)
+            .where(Users_addresses.id == address_id,
+                   Users_addresses.userId == user_id,
+                   Users_addresses.address_string != True)
         if not address.exists():
             return "address not found", 403
         address = address.get()
@@ -101,7 +103,7 @@ def address_info():
         address.save()
         user = user.get()
         user = model_to_dict(user)
-        user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address) \
+        user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address_string) \
             .where(Users_addresses.userId == user_id, Users_addresses.delete != True).dicts() \
             .order_by(Users_addresses.id.desc())
         user["addresses"] = list(user_addresses)
