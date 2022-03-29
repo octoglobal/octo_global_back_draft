@@ -1,0 +1,8 @@
+version: "3.9"
+services:
+  app:
+    image: og_back
+    container_name: og_back
+    restart: always
+    ports:
+      - 7777:80
