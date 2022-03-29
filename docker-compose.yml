@@ -7,4 +7,4 @@ services:
     ports:
       - 7777:80
     volumes:
-      - /var/www/test_volume
+      - ./static:/var/www/test_volume
