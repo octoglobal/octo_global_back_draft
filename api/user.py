@@ -8,6 +8,12 @@ from functions import data_ordering
 user_api = Blueprint("user_api", __name__)
 
 
+@user_api.route("/egg", methods=["GET"])
+def egg():
+    if request.method == "GET":
+        return "Oh, Hi Mark", 200
+
+
 @user_api.route("/user", methods=["GET", "PATCH"])
 @jwt_required()
 def user_data():
@@ -24,7 +30,7 @@ def user_data():
             .order_by(Users_addresses.id.desc()).dicts()
         user["addresses"] = list(user_addresses)
         enough_user_data = data_ordering.get_user_enough_data(user)
-        return jsonify({"user": enough_user_data})
+        return jsonify({"user": enough_user_data}), 200
 
     if request.method == "PATCH":
         token_data = get_jwt_identity()
@@ -46,13 +52,7 @@ def user_data():
             except Exception:
                 pass
         user.save()
-        user = model_to_dict(user)
-        user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address_string) \
-            .where(Users_addresses.userId == user_id, Users_addresses.delete != True)\
-            .order_by(Users_addresses.id.desc()).dicts()
-        user["addresses"] = list(user_addresses)
-        enough_user_data = data_ordering.get_user_enough_data(user)
-        return jsonify({"user": enough_user_data})
+        return jsonify({"message": "success"}), 200
 
 
 @user_api.route("/user/address", methods=["POST", "DELETE"])
@@ -70,17 +70,9 @@ def address_info():
         if not user.exists():
             return "user not found", 403
         Users_addresses.create(userId=user_id, address=address, delete=False, createdTime=datetime.now())
-        user = user.get()
-        user = model_to_dict(user)
-        user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address_string) \
-            .where(Users_addresses.userId == user_id, Users_addresses.delete != True)\
-            .order_by(Users_addresses.id.desc()).dicts()
-        user["addresses"] = list(user_addresses)
-        enough_user_data = data_ordering.get_user_enough_data(user)
-        return jsonify({"user": enough_user_data})
+        return jsonify({"message": "success"}), 200
 
     if request.method == "DELETE":
-
         request_data = request.get_json()
         try:
             address_id = str(request_data["address_id"])
@@ -101,11 +93,4 @@ def address_info():
         address.deletedTime = datetime.now()
         address.delete = True
         address.save()
-        user = user.get()
-        user = model_to_dict(user)
-        user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address_string) \
-            .where(Users_addresses.userId == user_id, Users_addresses.delete != True).dicts() \
-            .order_by(Users_addresses.id.desc())
-        user["addresses"] = list(user_addresses)
-        enough_user_data = data_ordering.get_user_enough_data(user)
-        return jsonify({"user": enough_user_data})
+        return jsonify({"message": "success"}), 200
