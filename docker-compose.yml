@@ -6,3 +6,5 @@ services:
     restart: always
     ports:
       - 7777:80
+    volumes:
+      - /var/www/test_volume
