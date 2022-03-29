@@ -5,6 +5,6 @@ services:
     container_name: og_back
     restart: always
     ports:
-      - 9999:80
+      - 7777:80
     volumes:
-      - ./static:/var/www/test_volume
+      - /var/www/octo_global_static_files:/usr/src/app/static
