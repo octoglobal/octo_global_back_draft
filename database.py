@@ -19,6 +19,7 @@ class BaseModel(Model):
 
 class User(BaseModel):
     id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
+    personalAreaId = IntegerField(column_name="personal_area_id", unique=True)
     email = TextField(column_name="email", unique=True)
     phone = TextField(column_name="phone", null=True)
     verifiedEmail = BooleanField(column_name="verified_email")
@@ -55,6 +56,8 @@ class Users_addresses(BaseModel):
     name = TextField(column_name="name")
     surname = TextField(column_name="surname")
     address_string = TextField(column_name="address_string")
+    latitude = TextField(column_name="latitude", null=True)
+    longitude = TextField(column_name="longitude", null=True)
     delete = BooleanField(column_name="delete", null=True)
     createdTime = DateTimeField(column_name="created_time", null=True)
     deletedTime = DateTimeField(column_name="deleted_time", null=True)

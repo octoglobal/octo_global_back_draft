@@ -34,6 +34,7 @@ def registration():
             password = str(request_data["password"])
         except Exception:
             return "invalid data", 422
+        personal_area_id = data_ordering.make_personal_area_id()
         if User.get_or_none(email=email) is not None:
             return "user with this email already exists", 409
         privat_salt = uuid.uuid4().hex
@@ -41,6 +42,7 @@ def registration():
         hashed_password = data_ordering.password_hash(password, privat_salt)
         try:
             User.create(
+                personalAreaId=personal_area_id,
                 email=email,
                 name=name,
                 surname=surname,
@@ -83,7 +85,9 @@ def login():
         access_token = create_access_token(identity=identify)
         refresh_token = create_refresh_token(identity=identify)
         user = model_to_dict(user)
-        user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address_string) \
+        user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address_string,
+                                                Users_addresses.phone, Users_addresses.name, Users_addresses.surname,
+                                                Users_addresses.longitude, Users_addresses.latitude) \
             .where(Users_addresses.userId == user_id, Users_addresses.delete != True)\
             .order_by(Users_addresses.id.desc()).dicts()
         user["addresses"] = list(user_addresses)

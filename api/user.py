@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from playhouse.shortcuts import model_to_dict
 from datetime import datetime
-from database import User, Users_addresses
+from database import User, Users_addresses, Order
 from functions import data_ordering
 
 user_api = Blueprint("user_api", __name__)
@@ -25,10 +25,18 @@ def user_data():
             return "user not found", 403
         user = user.get()
         user = model_to_dict(user)
-        user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address_string) \
+        user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address_string,
+                                                Users_addresses.phone, Users_addresses.name, Users_addresses.surname,
+                                                Users_addresses.longitude, Users_addresses.latitude) \
             .where(Users_addresses.userId == user_id, Users_addresses.delete != True)\
             .order_by(Users_addresses.id.desc()).dicts()
         user["addresses"] = list(user_addresses)
+
+        # user_orders = Order.select(Order.id, Users_addresses.address_string) \
+        #     .where(Users_addresses.userId == user_id, Users_addresses.delete != True) \
+        #     .order_by(Users_addresses.id.desc()).dicts()
+        # user["addresses"] = list(user_addresses)
+
         enough_user_data = data_ordering.get_user_enough_data(user)
         return jsonify({"user": enough_user_data}), 200
 
@@ -61,7 +69,12 @@ def address_info():
     if request.method == "POST":
         request_data = request.get_json()
         try:
-            address = str(request_data["address"])
+            name = str(request_data["name"])
+            surname = str(request_data["surname"])
+            address_string = str(request_data["address_string"])
+            latitude = str(request_data["latitude"])
+            longitude = str(request_data["longitude"])
+            phone = str(request_data["phone"])
         except Exception:
             return "invalid data", 422
         token_data = get_jwt_identity()
@@ -69,7 +82,17 @@ def address_info():
         user = User.select().where(User.id == user_id)
         if not user.exists():
             return "user not found", 403
-        Users_addresses.create(userId=user_id, address=address, delete=False, createdTime=datetime.now())
+        Users_addresses.create(
+            userId=user_id,
+            name=name,
+            surname=surname,
+            address_string=address_string,
+            latitude=latitude,
+            longitude=longitude,
+            phone=phone,
+            delete=False,
+            createdTime=datetime.now()
+        )
         return jsonify({"message": "success"}), 200
 
     if request.method == "DELETE":
@@ -94,3 +117,21 @@ def address_info():
         address.delete = True
         address.save()
         return jsonify({"message": "success"}), 200
+
+
+# @user_api.route("/user/orders", methods=["POST"])
+# @jwt_required()
+# def orders_info():
+#     if request.method == "POST":
+#         request_data = request.get_json()
+#         try:
+#             address = str(request_data["address"])
+#         except Exception:
+#             return "invalid data", 422
+#         token_data = get_jwt_identity()
+#         user_id = token_data["user_id"]
+#         user = User.select().where(User.id == user_id)
+#         if not user.exists():
+#             return "user not found", 403
+#         Users_addresses.create(userId=user_id, address=address, delete=False, createdTime=datetime.now())
+#         return jsonify({"message": "success"}), 200
