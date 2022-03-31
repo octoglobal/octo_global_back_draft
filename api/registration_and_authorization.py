@@ -145,7 +145,7 @@ def send_recovery_message():
         identify = {"user_id": user_id, "for_recovery_password": True}
         access_token = create_access_token(identity=identify)
         if not email_sending.send_recovery_message(email, "Octo Global: Восстановление пароля",
-                                                   pretty_time_limit, access_token):
+                                                   datetime.utcnow(), pretty_time_limit, access_token):
             return "internal server error", 500
         return jsonify({"message": "message sent successfully"}), 200
 

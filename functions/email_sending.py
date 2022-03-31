@@ -59,11 +59,11 @@ def send_verification_message(recipient, subject, email_token):
     return send_email(recipient, subject, text)
 
 
-def send_recovery_message(recipient, subject, time, token):
-    query_string = str(urlencode(OrderedDict(token=token)))
+def send_recovery_message(recipient, subject, time, time_string, token):
+    query_string = str(urlencode(OrderedDict(token=token, expaire=str(time))))
     url = str(config.front_domain + "/reset_password?" + query_string)
     text = "Для смены пароля: " \
-           "\n\nПароль можно сменить до: " + str(time) + \
+           "\n\nПароль можно сменить до: " + str(time_string) + \
            "\n\nДля смены пароля: " \
            "\n\nСсылка = " + url
     return send_email(recipient, subject, text)

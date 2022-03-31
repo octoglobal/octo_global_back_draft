@@ -115,12 +115,21 @@ def address_info():
         return jsonify({"message": "success"}), 200
 
 
-@user_api.route("/user/order", methods=["GET", "POST"])
+@user_api.route("/user/orders", methods=["GET", "POST"])
 @jwt_required()
 def orders_info():
 
     if request.method == "GET":
-        return "USER ORDERS"
+        token_data = get_jwt_identity()
+        user_id = token_data["user_id"]
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        user_orders = Order.select(Order.id, Order.longId, Order.userId, Order.title, Order.comment, Order.trackNumber,
+                                   Order.statusId, Order.createdTime) \
+            .where(Order.userId == user_id)\
+            .order_by(Order.id.desc()).dicts()
+        return jsonify({"user_orders": list(user_orders)}), 200
 
     if request.method == "POST":
         request_data = request.get_json()
@@ -135,5 +144,16 @@ def orders_info():
         user = User.select().where(User.id == user_id)
         if not user.exists():
             return "user not found", 403
-        Order.create(userId=user_id, title=title, comment=comment, trackNumber=track_number, createdTime=datetime.now())
+        if Order.get_or_none(userId=user_id, trackNumber=track_number) is not None:
+            return "order with this track number already exists", 409
+        long_id = data_ordering.make_order_long_id()
+        Order.create(
+            userId=user_id,
+            longId=long_id,
+            title=title,
+            comment=comment,
+            statusId=0,
+            trackNumber=track_number,
+            createdTime=datetime.now()
+        )
         return jsonify({"message": "success"}), 200
