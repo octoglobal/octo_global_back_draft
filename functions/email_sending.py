@@ -2,13 +2,13 @@ import smtplib
 from datetime import datetime
 from urllib.parse import urlencode
 from collections import OrderedDict
-import mimetypes
-from email import encoders
-from email.mime.base import MIMEBase
-from email.mime.text import MIMEText
-from email.mime.image import MIMEImage
-from email.mime.audio import MIMEAudio
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+# import mimetypes
+# from email import encoders
+# from email.mime.base import MIMEBase
+# from email.mime.image import MIMEImage
+# from email.mime.audio import MIMEAudio
 import config
 from database import Email_message
 from functions.loger import error_log

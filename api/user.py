@@ -17,6 +17,7 @@ def egg():
 @user_api.route("/user", methods=["GET", "PATCH"])
 @jwt_required()
 def user_data():
+
     if request.method == "GET":
         token_data = get_jwt_identity()
         user_id = token_data["user_id"]
@@ -31,12 +32,6 @@ def user_data():
             .where(Users_addresses.userId == user_id, Users_addresses.delete != True)\
             .order_by(Users_addresses.id.desc()).dicts()
         user["addresses"] = list(user_addresses)
-
-        # user_orders = Order.select(Order.id, Users_addresses.address_string) \
-        #     .where(Users_addresses.userId == user_id, Users_addresses.delete != True) \
-        #     .order_by(Users_addresses.id.desc()).dicts()
-        # user["addresses"] = list(user_addresses)
-
         enough_user_data = data_ordering.get_user_enough_data(user)
         return jsonify({"user": enough_user_data}), 200
 
@@ -66,6 +61,7 @@ def user_data():
 @user_api.route("/user/address", methods=["POST", "DELETE"])
 @jwt_required()
 def address_info():
+
     if request.method == "POST":
         request_data = request.get_json()
         try:
@@ -119,19 +115,25 @@ def address_info():
         return jsonify({"message": "success"}), 200
 
 
-# @user_api.route("/user/orders", methods=["POST"])
-# @jwt_required()
-# def orders_info():
-#     if request.method == "POST":
-#         request_data = request.get_json()
-#         try:
-#             address = str(request_data["address"])
-#         except Exception:
-#             return "invalid data", 422
-#         token_data = get_jwt_identity()
-#         user_id = token_data["user_id"]
-#         user = User.select().where(User.id == user_id)
-#         if not user.exists():
-#             return "user not found", 403
-#         Users_addresses.create(userId=user_id, address=address, delete=False, createdTime=datetime.now())
-#         return jsonify({"message": "success"}), 200
+@user_api.route("/user/order", methods=["GET", "POST"])
+@jwt_required()
+def orders_info():
+
+    if request.method == "GET":
+        return "USER ORDERS"
+
+    if request.method == "POST":
+        request_data = request.get_json()
+        try:
+            track_number = str(request_data["track_number"])
+            title = str(request_data["title"])
+            comment = str(request_data["comment"])
+        except Exception:
+            return "invalid data", 422
+        token_data = get_jwt_identity()
+        user_id = token_data["user_id"]
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        Order.create(userId=user_id, title=title, comment=comment, trackNumber=track_number, createdTime=datetime.now())
+        return jsonify({"message": "success"}), 200

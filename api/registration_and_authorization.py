@@ -166,7 +166,6 @@ def mail_confirmation():
         user = user.get()
         user.verifiedEmail = True
         user.save()
-
         return jsonify({"message": "mail successfully verified"}), 200
 
 

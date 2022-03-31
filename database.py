@@ -41,6 +41,9 @@ class User(BaseModel):
 
 class Order(BaseModel):
     id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
+    userId = IntegerField(column_name="user_id")
+    title = TextField(column_name="title", null=True)
+    comment = TextField(column_name="comment", null=True)
     trackNumber = TextField(column_name="track_number")
     statusId = IntegerField(column_name="status_id", null=True)
     createdTime = DateTimeField(column_name="created_time", null=True)
