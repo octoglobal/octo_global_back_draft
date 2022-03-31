@@ -140,12 +140,13 @@ def send_recovery_message():
                                                           Email_message.date >= time).dicts())
         if len(recovery_list) >= 5:
             return "too many requests", 429
-        time_limit = datetime.utcnow() + timedelta(hours=3, minutes=30)
-        pretty_time_limit = "до " + str(time_limit.strftime("%H:%M %d.%m.%y")) + " (МСК)"
+        time_limit = datetime.utcnow() + timedelta(minutes=30)
+        time_limit_moscow = time_limit + timedelta(hours=3)
+        pretty_time_limit = "до " + str(time_limit_moscow.strftime("%H:%M %d.%m.%y")) + " (МСК)"
         identify = {"user_id": user_id, "for_recovery_password": True}
         access_token = create_access_token(identity=identify)
         if not email_sending.send_recovery_message(email, "Octo Global: Восстановление пароля",
-                                                   datetime.utcnow(), pretty_time_limit, access_token):
+                                                   time_limit, pretty_time_limit, access_token):
             return "internal server error", 500
         return jsonify({"message": "message sent successfully"}), 200
 
