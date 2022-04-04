@@ -76,23 +76,20 @@ def send_verification_message(recipient, subject, email_token, name, surname):
     query_string = str(urlencode(OrderedDict(email=recipient, token=email_token)))
     url = str(config.front_domain + "/confirm?" + query_string)
     html = """
-        <html>
-            <body>
-                <p>
-                    Здравствуйте, {name} {surname}!
-                    <br>
-                    <br>
-                    Для изменения пароля нажмите на ссылку ниже:
-                    <br>
-                    <br>
-                    <a href={url}>Восстановить пароль</a>
-                    <br>
-                    <br>
-                    С уважением octo global.
-                </p>
-            </body>
-        </html>
-        """.format(name=name, surname=surname, email=recipient, url=url)
+            <html>
+                <body>
+                    <p>
+                        Здравствуйте, {name} {surname}!
+                        <br>
+                        <br>
+                        <a href={url}>Подтвердите почтовый адрес</a>
+                        <br>
+                        <br>
+                        С уважением octo global.
+                    </p>
+                </body>
+            </html>
+            """.format(name=name, surname=surname, email=recipient, url=url)
     return send_email(recipient, subject, html)
 
 
@@ -100,18 +97,21 @@ def send_recovery_message(recipient, subject, time, token, name, surname):
     query_string = str(urlencode(OrderedDict(token=token, expaire=str(time))))
     url = str(config.front_domain + "/reset_password?" + query_string)
     html = """
-        <html>
-            <body>
-                <p>
-                    Здравствуйте, {name} {surname}!
-                    <br>
-                    <br>
-                    <a href={url}>Подтвердите почтовый адрес</a>
-                    <br>
-                    <br>
-                    С уважением octo global.
-                </p>
-            </body>
-        </html>
-        """.format(name=name, surname=surname, email=recipient, url=url)
+            <html>
+                <body>
+                    <p>
+                        Здравствуйте, {name} {surname}!
+                        <br>
+                        <br>
+                        Для изменения пароля нажмите на ссылку ниже:
+                        <br>
+                        <br>
+                        <a href={url}>Восстановить пароль</a>
+                        <br>
+                        <br>
+                        С уважением octo global.
+                    </p>
+                </body>
+            </html>
+            """.format(name=name, surname=surname, email=recipient, url=url)
     return send_email(recipient, subject, html)
