@@ -129,6 +129,8 @@ def orders_info():
                                    Order.statusId, Order.createdTime) \
             .where(Order.userId == user_id)\
             .order_by(Order.id.desc()).dicts()
+        for order in list(user_orders):
+            order["tracking_link"] = "https://gdeposylka.ru/" + str(order["trackNumber"])
         return jsonify({"user_orders": list(user_orders)}), 200
 
     if request.method == "POST":
