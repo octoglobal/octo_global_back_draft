@@ -4,6 +4,7 @@ from flask_jwt_extended import create_access_token, create_refresh_token, jwt_re
 from playhouse.shortcuts import model_to_dict
 from datetime import datetime, timedelta
 import uuid
+import config
 from database import User, Email_message, Users_addresses
 from functions import data_ordering, email_sending
 
@@ -55,7 +56,7 @@ def registration():
             )
         except Exception:
             return "internal server error", 500
-        if not email_sending.send_welcome_message(email, "Добро пожаловать в Octo Global!", email_token):
+        if not email_sending.send_welcome_message(email, "Добро пожаловать в Octo Global!", email_token, name, surname):
             return jsonify({"message": "user successfully created", "sendEmail": False}), 201
         return jsonify({"message": "user successfully created", "sendEmail": True}), 201
 
@@ -81,7 +82,10 @@ def login():
         hashed_password = data_ordering.password_hash(password, privat_salt)
         if db_hashed_password != hashed_password:
             return "wrong password", 403
-        identify = {"user_id": user_id}
+        identify = {"user_id": user_id, "status": 0}
+        if email == config.admin_email:
+            identify = {"user_id": user_id, "status": 9}
+
         access_token = create_access_token(identity=identify)
         refresh_token = create_refresh_token(identity=identify)
         user = model_to_dict(user)
@@ -109,6 +113,8 @@ def send_verification_message():
         if not user.exists():
             return "user not found", 403
         user = user.get()
+        name = str(user.name)
+        surname = str(user.surname)
         email = user.email
         email_token = user.email_token
         time = datetime.now() - timedelta(minutes=60)
@@ -116,7 +122,8 @@ def send_verification_message():
                                                           Email_message.date >= time).dicts())
         if len(recovery_list) >= 5:
             return "too many requests", 429
-        if not email_sending.send_verification_message(email, "Octo Global: Подтверждение E-mail", email_token):
+        if not email_sending.send_verification_message(email, "Octo Global: Подтверждение E-mail",
+                                                       email_token, name, surname):
             return "internal server error", 500
         return jsonify({"message": "message sent successfully"}), 200
 
@@ -135,18 +142,18 @@ def send_recovery_message():
             return "user not found", 403
         user = user.get()
         user_id = user.id
+        name = str(user.name)
+        surname = str(user.surname)
         time = datetime.now() - timedelta(minutes=60)
         recovery_list = list(Email_message.select().where(Email_message.recipient == email,
                                                           Email_message.date >= time).dicts())
         if len(recovery_list) >= 5:
             return "too many requests", 429
         time_limit = datetime.utcnow() + timedelta(minutes=30)
-        time_limit_moscow = time_limit + timedelta(hours=3)
-        pretty_time_limit = "до " + str(time_limit_moscow.strftime("%H:%M %d.%m.%y")) + " (МСК)"
-        identify = {"user_id": user_id, "for_recovery_password": True}
+        identify = {"user_id": user_id, "status": 5}
         access_token = create_access_token(identity=identify)
         if not email_sending.send_recovery_message(email, "Octo Global: Восстановление пароля",
-                                                   time_limit, pretty_time_limit, access_token):
+                                                   time_limit, access_token, name, surname):
             return "internal server error", 500
         return jsonify({"message": "message sent successfully"}), 200
 
@@ -208,17 +215,22 @@ def password_recovery():
         token_data = get_jwt_identity()
         request_data = request.get_json()
         try:
-            recovery_token_check = token_data["for_recovery_password"]
+            recovery_token_check = token_data["status"]
             new_password = str(request_data["password"])
         except Exception:
             return "invalid data", 422
-        if not recovery_token_check:
+        if recovery_token_check != 5:
             return "invalid data", 422
         user_id = token_data["user_id"]
         user = User.select().where(User.id == user_id)
         if not user.exists():
             return "user not found", 403
         user = user.get()
+        old_privat_salt = user.salt
+        db_hashed_password = user.password
+        old_hashed_password = data_ordering.password_hash(new_password, old_privat_salt)
+        if db_hashed_password == old_hashed_password:
+            return "old and new passwords must be different", 409
         new_privat_salt = uuid.uuid4().hex
         new_hashed_password = data_ordering.password_hash(new_password, new_privat_salt)
         user.password = new_hashed_password

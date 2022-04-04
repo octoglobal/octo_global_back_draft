@@ -22,8 +22,8 @@ def send_email(recipient, subject, message_text):
         message["From"] = config.smtp_from
         message["To"] = str(recipient)
         message["Subject"] = str(subject)
-        text = message_text
-        message.attach(MIMEText(text, "plain"))
+        html = message_text
+        message.attach(MIMEText(html, "html"))
         server = smtplib.SMTP_SSL(config.smtp_host, config.smtp_port)
         server.login(email_smtp_login, email_smtp_password)
         server.send_message(message)
@@ -32,7 +32,7 @@ def send_email(recipient, subject, message_text):
             smtpEmail=str(email_smtp_login),
             recipient=str(recipient),
             subject=str(subject),
-            body=str(text),
+            body=str(html),
             date=datetime.now()
         )
         return True
@@ -42,28 +42,76 @@ def send_email(recipient, subject, message_text):
         return False
 
 
-def send_welcome_message(recipient, subject, email_token):
+def send_welcome_message(recipient, subject, email_token, name, surname):
     query_string = str(urlencode(OrderedDict(email=recipient, token=email_token)))
     url = str(config.front_domain + "/confirm?" + query_string)
-    text = "Приветствие бла бла" \
-           "\n\nДля подтверждения почты: " \
-           "\n\nСсылка = " + url
-    return send_email(recipient, subject, text)
+    html = """
+    <html>
+        <body>
+            <p>
+                <b>
+                    Регистрация успешна    
+                </b>
+                <br>
+                Здравствуйте, {name} {surname}!
+                <br>
+                Благодарим за регистрацию на нашем сервисе.
+                <br>
+                <br>
+                Ваш логин {email}
+                <br>
+                <br>
+                <a href={url}>Подтвердите почтовый адрес</a>
+                <br>
+                <br>
+                С уважением octo global.
+            </p>
+        </body>
+    </html>
+    """.format(name=name, surname=surname, email=recipient, url=url)
+    return send_email(recipient, subject, html)
 
 
-def send_verification_message(recipient, subject, email_token):
+def send_verification_message(recipient, subject, email_token, name, surname):
     query_string = str(urlencode(OrderedDict(email=recipient, token=email_token)))
     url = str(config.front_domain + "/confirm?" + query_string)
-    text = "Для подтверждения почты: " \
-           "\n\nСсылка = " + url
-    return send_email(recipient, subject, text)
+    html = """
+        <html>
+            <body>
+                <p>
+                    Здравствуйте, {name} {surname}!
+                    <br>
+                    <br>
+                    Для изменения пароля нажмите на ссылку ниже:
+                    <br>
+                    <br>
+                    <a href={url}>Восстановить пароль</a>
+                    <br>
+                    <br>
+                    С уважением octo global.
+                </p>
+            </body>
+        </html>
+        """.format(name=name, surname=surname, email=recipient, url=url)
+    return send_email(recipient, subject, html)
 
 
-def send_recovery_message(recipient, subject, time, time_string, token):
+def send_recovery_message(recipient, subject, time, token, name, surname):
     query_string = str(urlencode(OrderedDict(token=token, expaire=str(time))))
     url = str(config.front_domain + "/reset_password?" + query_string)
-    text = "Для смены пароля: " \
-           "\n\nПароль можно сменить до: " + str(time_string) + \
-           "\n\nДля смены пароля: " \
-           "\n\nСсылка = " + url
-    return send_email(recipient, subject, text)
+    html = """
+        <html>
+            <body>
+                <p>
+                    Здравствуйте, {name} {surname}!
+                    <br>
+                    <br>
+                    <a href={url}>Подтвердите почтовый адрес</a>
+                    <br>
+                    <br>
+                    С уважением octo global.
+                </p>
+            </body>
+        </html>
+        """.format(name=name, surname=surname, email=recipient, url=url)
+    return send_email(recipient, subject, html)
