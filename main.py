@@ -4,16 +4,15 @@ from flask_cors import CORS
 from datetime import timedelta
 import config
 from api.registration_and_authorization import reg_and_auth
-from api.imeges import image
+from api.imeges import images_api
 from api.user import user_api
 from api.admin import admin_api
-
 
 app = Flask(__name__, static_url_path=config.static_url_path)
 app.register_blueprint(admin_api)
 app.register_blueprint(reg_and_auth)
 app.register_blueprint(user_api)
-app.register_blueprint(image)
+app.register_blueprint(images_api)
 jwt = JWTManager(app)
 CORS(app, supports_credentials=config.supports_credentials)
 app.config["SECRET_KEY"] = config.flask_secret_key

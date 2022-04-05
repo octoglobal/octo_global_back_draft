@@ -159,3 +159,9 @@ def orders_info():
             createdTime=datetime.now()
         )
         return jsonify({"message": "success"}), 200
+
+
+@user_api.route("/shop", methods=["GET", "PATCH"])
+def shop_info():
+    if request.method == "GET":
+        return "asfasfasfsafasd"

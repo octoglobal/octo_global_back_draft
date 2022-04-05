@@ -2,10 +2,10 @@ from flask import Blueprint, request, send_file, abort
 from functions import images_func
 
 
-image = Blueprint("image_serv", __name__)
+images_api = Blueprint("image_serv", __name__)
 
 
-@image.route("/image/<image_hash>", methods=["GET"])
+@images_api.route("/image/<image_hash>", methods=["GET"])
 def get_images(image_hash):
 
     if request.method == "GET":
