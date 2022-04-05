@@ -2,8 +2,9 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from functools import wraps
 import json
-from database import Shop
-from functions import images_func
+from database import Shop, Tag_of_post
+from functions import images_func, data_ordering
+
 
 admin_api = Blueprint("admin_api", __name__)
 
@@ -46,8 +47,17 @@ def admin_shop_actions():
             description = str(request_data["description"])
             price_id = int(request_data["priceId"])
             url = str(request_data["url"])
+            tags = request_data["tags"]
+            if type(tags) != list:
+                return "invalid data", 422
+            project_tags = [temp["id"] for temp in data_ordering.tags]
+            for tag in tags:
+                if type(tag) != int or tag <= 0 or len(tags) != len(set(tags)) or tag not in project_tags:
+                    return "invalid data", 422
         except Exception:
             return "invalid data", 422
+        if Shop.get_or_none(alias=alias) is not None:
+            return "shop with this alias already exists", 409
         try:
             image_list = request_files["image"]
             logo_list = request_files["logo"]
@@ -62,17 +72,22 @@ def admin_shop_actions():
             logo = images_func.save_image(logo_file, 500)
         except Exception:
             return "image loading error", 422
-
-        print(photo)
-        print(logo)
-
-        # Shop.create(
-        #     alias=alias,
-        #     title=title,
-        #     description=description,
-        #     photo=photo,
-        #     logo=logo,
-        #     priceId=price_id,
-        #     url=url
-        # )
+        try:
+            shop = Shop.create(
+                alias=alias,
+                title=title,
+                description=description,
+                photo=photo,
+                logo=logo,
+                priceId=price_id,
+                url=url
+            )
+            shop_id = shop.id
+            tag_of_posts_data = []
+            for tag in tags:
+                tag_of_posts_data.append({"post_id": shop_id, "tag_id": tag})
+            Tag_of_post.insert_many(tag_of_posts_data).execute()
+        except Exception as e:
+            print(e)
+            return "internal server error", 500
         return jsonify({"message": "success"}), 200

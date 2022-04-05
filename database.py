@@ -92,7 +92,7 @@ class Users_addresses(BaseModel):
         table_name = "users_addresses"
 
 
-class News(BaseModel):
+class Post(BaseModel):
     id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
     title = TextField(column_name="title")
     body = TextField(column_name="body")
@@ -101,7 +101,7 @@ class News(BaseModel):
     editedTime = DateTimeField(column_name="edited_time", null=True)
 
     class Meta:
-        table_name = "news"
+        table_name = "posts"
 
 
 class Shop(BaseModel):
@@ -111,11 +111,27 @@ class Shop(BaseModel):
     description = TextField(column_name="description")
     photo = TextField(column_name="photo", null=True)
     logo = TextField(column_name="logo", null=True)
-    priceId = IntegerField(column_name="price_id", null=True)
     url = TextField(column_name="url", null=True)
 
     class Meta:
         table_name = "shops"
+
+
+class Tag(BaseModel):
+    id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
+    title = TextField(column_name="title", unique=True)
+
+    class Meta:
+        table_name = "tags"
+
+
+class Tag_of_post(BaseModel):
+    id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
+    post_id = IntegerField(column_name="post_id")
+    tag_id = IntegerField(column_name="tag_id")
+
+    class Meta:
+        table_name = "tags_of_posts"
 
 
 class Email_message(BaseModel):
