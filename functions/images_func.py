@@ -19,7 +19,9 @@ def save_image(image, max_size):
     if not image or not data_ordering.check_image_filename(filename):
         raise Exception
     data = image.read()
-    image_hash = str(hashlib.md5(data).hexdigest())
+    image_hash_md5 = str(hashlib.md5(data).hexdigest())
+    image_hash_sha1 = str(hashlib.sha1(data).hexdigest())
+    image_hash = image_hash_md5 + image_hash_sha1
     new_filename = image_hash[8:] + ".webp"
     photo = Image.open(image)
     photo = photo.convert('RGB')
