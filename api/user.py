@@ -173,18 +173,22 @@ def shop_info():
                 page = 1
         except Exception:
             page = 1
-        # try:
-        #     tags = list(set(args["tag"]))
-        #     db_tags = Tag.select().where(Tag.id in tags)
-        #     print(list(db_tags.dicts()))
-        # except Exception:
-        #     tags = []
+        try:
+            tags = []
+            for tag in args["tag"]:
+                try:
+                    tags.append(int(tag))
+                except Exception:
+                    pass
+            db_tags = Tag.select().where(Tag.id << tags)
 
-        # if len(tags) > 0:
-        #     print("123123123123")
-
+        except Exception:
+            db_tags = []
         offset = (page - 1) * page_limit
-        shops = Shop.select().offset(offset).limit(page_limit)
+        if len(db_tags) > 0:
+            shops = Shop.select().offset(offset).limit(page_limit).where(Tag_of_shops.tag_id << db_tags).join(Tag_of_shops, on=(Shop.id == Tag_of_shops.shop_id))
+        else:
+            shops = Shop.select().offset(offset).limit(page_limit)
         shops_tags = Tag_of_shops.select(Tag_of_shops.shop_id, Tag_of_shops.tag_id, Tag.title)\
             .where(Tag_of_shops.shop_id << shops).join(Tag, on=(Tag_of_shops.tag_id == Tag.id))
         for shop in shops:
