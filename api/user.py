@@ -186,7 +186,8 @@ def shop_info():
             db_tags = []
         offset = (page - 1) * page_limit
         if len(db_tags) > 0:
-            shops = Shop.select().offset(offset).limit(page_limit).where(Tag_of_shops.tag_id << db_tags).join(Tag_of_shops, on=(Shop.id == Tag_of_shops.shop_id))
+            shops = Shop.select().offset(offset).limit(page_limit).where(Tag_of_shops.tag_id << db_tags)\
+                .join(Tag_of_shops, on=(Shop.id == Tag_of_shops.shop_id))
         else:
             shops = Shop.select().offset(offset).limit(page_limit)
         shops_tags = Tag_of_shops.select(Tag_of_shops.shop_id, Tag_of_shops.tag_id, Tag.title)\
