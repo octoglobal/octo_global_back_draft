@@ -2,8 +2,8 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from functools import wraps
 import json
-from database import Shop, Tag_of_post
-from functions import images_func, data_ordering
+from database import Shop, Tag_of_shops, Tag
+from functions import images_func
 
 
 admin_api = Blueprint("admin_api", __name__)
@@ -50,7 +50,8 @@ def admin_shop_actions():
             tags = request_data["tags"]
             if type(tags) != list:
                 return "invalid data", 422
-            project_tags = [temp["id"] for temp in data_ordering.tags]
+            project_tags = list(Tag.select().dicts())
+            project_tags = [temp["id"] for temp in project_tags]
             for tag in tags:
                 if type(tag) != int or tag <= 0 or len(tags) != len(set(tags)) or tag not in project_tags:
                     return "invalid data", 422
@@ -85,8 +86,8 @@ def admin_shop_actions():
             shop_id = shop.id
             tag_of_posts_data = []
             for tag in tags:
-                tag_of_posts_data.append({"post_id": shop_id, "tag_id": tag})
-            Tag_of_post.insert_many(tag_of_posts_data).execute()
+                tag_of_posts_data.append({"shop_id": shop_id, "tag_id": tag})
+            Tag_of_shops.insert_many(tag_of_posts_data).execute()
         except Exception as e:
             print(e)
             return "internal server error", 500

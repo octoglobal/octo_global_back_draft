@@ -96,23 +96,3 @@ def get_status_of_order(status_id):
     }
     status = statuses[status_id]
     return status
-
-
-tags = [
-    {
-        "id": 1,
-        "title": "Одежда"
-    },
-    {
-        "id": 2,
-        "title": "Электроника"
-    },
-    {
-        "id": 3,
-        "title": "Туризм"
-    },
-    {
-        "id": 4,
-        "title": "Сувениры"
-    }
-]

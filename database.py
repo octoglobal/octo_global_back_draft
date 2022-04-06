@@ -125,13 +125,13 @@ class Tag(BaseModel):
         table_name = "tags"
 
 
-class Tag_of_post(BaseModel):
+class Tag_of_shops(BaseModel):
     id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
-    post_id = IntegerField(column_name="post_id")
+    shop_id = IntegerField(column_name="shop_id")
     tag_id = IntegerField(column_name="tag_id")
 
     class Meta:
-        table_name = "tags_of_posts"
+        table_name = "tag_of_shops"
 
 
 class Email_message(BaseModel):

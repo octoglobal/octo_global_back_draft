@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from playhouse.shortcuts import model_to_dict
 from datetime import datetime
-from database import User, Users_addresses, Order
+from database import User, Users_addresses, Order, Shop, Tag, Tag_of_shops
 from functions import data_ordering
 
 user_api = Blueprint("user_api", __name__)
@@ -131,7 +131,7 @@ def orders_info():
             .order_by(Order.id.desc()).dicts()
         for order in list(user_orders):
             order["tracking_link"] = "https://gdeposylka.ru/" + str(order["trackNumber"])
-        return jsonify({"user_orders": list(user_orders)}), 200
+        return jsonify({"orders": list(user_orders)}), 200
 
     if request.method == "POST":
         request_data = request.get_json()
@@ -161,7 +161,38 @@ def orders_info():
         return jsonify({"message": "success"}), 200
 
 
-@user_api.route("/shop", methods=["GET", "PATCH"])
+@user_api.route("/shops", methods=["GET", "PATCH"])
 def shop_info():
     if request.method == "GET":
-        return "asfasfasfsafasd"
+        shops_list = []
+        page_limit = 10
+        args = request.args.to_dict(flat=False)
+        try:
+            page = int(args["page"][0])
+            if page <= 0:
+                page = 1
+        except Exception:
+            page = 1
+        # try:
+        #     tags = list(set(args["tag"]))
+        #     db_tags = Tag.select().where(Tag.id in tags)
+        #     print(list(db_tags.dicts()))
+        # except Exception:
+        #     tags = []
+
+        # if len(tags) > 0:
+        #     print("123123123123")
+
+        offset = (page - 1) * page_limit
+        shops = Shop.select().offset(offset).limit(page_limit)
+        shops_tags = Tag_of_shops.select(Tag_of_shops.shop_id, Tag_of_shops.tag_id, Tag.title)\
+            .where(Tag_of_shops.shop_id << shops).join(Tag, on=(Tag_of_shops.tag_id == Tag.id))
+        for shop in shops:
+            shop_tags_list = []
+            for shop_tag in shops_tags:
+                if shop.id == shop_tag.shop_id:
+                    shop_tags_list.append({"shop_tag_id": shop_tag.tag_id, "shop_tag_title": shop_tag.tag.title})
+            shop_dict = model_to_dict(shop)
+            shop_dict["tags"] = shop_tags_list
+            shops_list.append(shop_dict)
+        return jsonify({"shops": shops_list}), 200
