@@ -106,9 +106,9 @@ class Post(BaseModel):
 
 class Shop(BaseModel):
     id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
-    alias = TextField(column_name="alias", unique=True)
-    title = TextField(column_name="title")
-    description = TextField(column_name="description")
+    alias = TextField(column_name="alias", unique=True, null=True)
+    title = TextField(column_name="title", null=True)
+    description = TextField(column_name="description", null=True)
     photo = TextField(column_name="photo", null=True)
     logo = TextField(column_name="logo", null=True)
     url = TextField(column_name="url", null=True)
