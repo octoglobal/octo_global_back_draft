@@ -115,7 +115,7 @@ def address_info():
         return jsonify({"message": "success"}), 200
 
 
-@user_api.route("/user/orders", methods=["GET", "POST"])
+@user_api.route("/user/orders", methods=["GET", "POST", "DELETE"])
 @jwt_required()
 def orders_info():
 
@@ -158,6 +158,23 @@ def orders_info():
             trackNumber=track_number,
             createdTime=datetime.now()
         )
+        return jsonify({"message": "success"}), 200
+
+    if request.method == "DELETE":
+        request_data = request.get_json()
+        try:
+            order_id = str(request_data["orderId"])
+        except Exception:
+            return "invalid data", 422
+        token_data = get_jwt_identity()
+        user_id = token_data["user_id"]
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        order = Order.select().where(Order.id == order_id, Order.userId == user_id, Order.statusId == 0)
+        if not order.exists():
+            return "order not found or has an invalid status", 403
+        order.get().delete_instance()
         return jsonify({"message": "success"}), 200
 
 
