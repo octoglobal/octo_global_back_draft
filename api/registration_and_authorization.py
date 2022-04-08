@@ -134,7 +134,7 @@ def send_recovery_message():
     if request.method == "POST":
         request_data = request.get_json()
         try:
-            email = str(request_data["email"])
+            email = str(request_data["email"]).lower().replace(" ", "")
         except Exception:
             return "invalid data", 422
         user = User.select().where(User.email == email)
@@ -164,7 +164,7 @@ def mail_confirmation():
     if request.method == "POST":
         request_data = request.get_json()
         try:
-            email = str(request_data["email"])
+            email = str(request_data["email"]).lower().replace(" ", "")
             email_token = str(request_data["emailToken"])
         except Exception:
             return "invalid data", 422

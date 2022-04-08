@@ -218,3 +218,10 @@ def shop_info():
             shop_dict["tags"] = shop_tags_list
             shops_list.append(shop_dict)
         return jsonify({"shops": shops_list}), 200
+
+
+@user_api.route("/shops_tags", methods=["GET", "PATCH"])
+def shops_tags_info():
+    if request.method == "GET":
+        shops_tags = list(Tag.select().dicts())
+        return jsonify({"shops_tags": shops_tags}), 200
