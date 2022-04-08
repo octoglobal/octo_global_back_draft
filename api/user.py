@@ -165,7 +165,7 @@ def orders_info():
 def shop_info():
     if request.method == "GET":
         shops_list = []
-        page_limit = 10
+        page_limit = 12
         args = request.args.to_dict(flat=False)
         try:
             page = int(args["page"][0])
