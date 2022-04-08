@@ -117,7 +117,7 @@ def admin_shop_actions1():
         try:
             url = request_form["url"][0]
             tags = request_form["tags"]
-            title = request_form["title"]
+            title = request_form["title"][0]
             if type(tags) != list:
                 return "invalid data", 422
             project_tags = list(Tag.select().dicts())
