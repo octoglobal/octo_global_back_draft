@@ -225,3 +225,51 @@ def shops_tags_info():
     if request.method == "GET":
         shops_tags = list(Tag.select().dicts())
         return jsonify({"shops_tags": shops_tags}), 200
+
+
+@user_api.route("/review", methods=["GET", "POST"])
+@jwt_required()
+def reviews_info():
+
+    if request.method == "GET":
+        return "reviews_here"
+        # token_data = get_jwt_identity()
+        # user_id = token_data["user_id"]
+        # user = User.select().where(User.id == user_id)
+        # if not user.exists():
+        #     return "user not found", 403
+        # user_orders = Order.select(Order.id, Order.longId, Order.userId, Order.title, Order.comment, Order.trackNumber,
+        #                            Order.statusId, Order.createdTime) \
+        #     .where(Order.userId == user_id)\
+        #     .order_by(Order.id.desc()).dicts()
+        # for order in list(user_orders):
+        #     order["tracking_link"] = "https://gdeposylka.ru/" + str(order["trackNumber"])
+        # return jsonify({"orders": list(user_orders)}), 200
+
+    if request.method == "POST":
+        return "successfully add review"
+        # request_data = request.get_json()
+        # try:
+        #     track_number = str(request_data["track_number"])
+        #     title = str(request_data["title"])
+        #     comment = str(request_data["comment"])
+        # except Exception:
+        #     return "invalid data", 422
+        # token_data = get_jwt_identity()
+        # user_id = token_data["user_id"]
+        # user = User.select().where(User.id == user_id)
+        # if not user.exists():
+        #     return "user not found", 403
+        # if Order.get_or_none(userId=user_id, trackNumber=track_number) is not None:
+        #     return "order with this track number already exists", 409
+        # long_id = data_ordering.make_order_long_id()
+        # Order.create(
+        #     userId=user_id,
+        #     longId=long_id,
+        #     title=title,
+        #     comment=comment,
+        #     statusId=0,
+        #     trackNumber=track_number,
+        #     createdTime=datetime.now()
+        # )
+        # return jsonify({"message": "success"}), 200
