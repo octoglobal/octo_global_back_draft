@@ -4,7 +4,7 @@ from playhouse.shortcuts import model_to_dict
 from peewee import fn
 from datetime import datetime
 import math
-from database import User, Users_addresses, Order, Shop, Tag, Tag_of_shops, Review
+from database import User, Users_addresses, Order, Shop, Tag, Tag_of_shops, Review, Post, Post_photo
 from functions import data_ordering
 
 user_api = Blueprint("user_api", __name__)
@@ -263,15 +263,49 @@ def reviews_info():
         except Exception:
             page = 1
         offset = (page - 1) * page_limit
-        answer = {}
         reviews = list(Review
-                       .select(Review.text, Review.createdTime, User.name.alias("userName"))
+                       .select(Review.id, Review.text, Review.createdTime, User.name.alias("userName"))
                        .join(User, on=(Review.user_id == User.id))
                        .order_by(Review.id.desc()).dicts().offset(offset).limit(page_limit))
-        answer["reviews"] = reviews
+        answer = {"reviews": reviews}
         if page == 1:
             reviews_count = int(Review.select(fn.count(Review.id)).get().count)
             pages_count = math.ceil(reviews_count/page_limit)
+            if pages_count == 0:
+                pages_count = 1
+            answer["pages_count"] = pages_count
+        return jsonify(answer), 200
+
+
+@user_api.route("/blog", methods=["GET", "PATCH"])
+def blog_info():
+    if request.method == "GET":
+        posts_list = []
+        page_limit = 12
+        args = request.args.to_dict(flat=False)
+        try:
+            page = int(args["page"][0])
+            if page <= 0:
+                page = 1
+        except Exception:
+            page = 1
+        offset = (page - 1) * page_limit
+        posts = Post.select().offset(offset).limit(page_limit).order_by(Post.id.desc())
+        post_photos = Post_photo.select(Post_photo.id, Post_photo.post_id, Post_photo.image_hash)\
+            .where(Post_photo.post_id << posts).order_by(Post_photo.id)
+        for post in posts:
+            post_photo_list = []
+            for post_photo in post_photos:
+                if post.id == post_photo.post_id:
+                    post_photo_list.append({"photo_id": post_photo.id, "photo_hash": post_photo.image_hash})
+            post_dict = model_to_dict(post)
+            del post_dict["statusId"]
+            post_dict["photos"] = post_photo_list
+            posts_list.append(post_dict)
+        answer = {"posts": posts_list}
+        if page == 1:
+            posts_count = int(Post.select(fn.count(Post.id)).get().count)
+            pages_count = math.ceil(posts_count / page_limit)
             if pages_count == 0:
                 pages_count = 1
             answer["pages_count"] = pages_count

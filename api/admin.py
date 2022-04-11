@@ -2,7 +2,8 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from functools import wraps
 import json
-from database import Shop, Tag_of_shops, Tag, Review
+from datetime import datetime
+from database import Shop, Tag_of_shops, Tag, Review, Post, Post_photo
 from functions import images_func
 
 
@@ -108,4 +109,66 @@ def admin_review_actions():
         if not review.exists():
             return "review not found", 403
         review.get().delete_instance()
+        return jsonify({"message": "success"}), 200
+
+
+@admin_api.route("/admin/blog", methods=["POST", "DELETE"])
+@jwt_required()
+# @admin_required
+def admin_blog_actions():
+    if request.method == "POST":
+        request_files = request.files.to_dict(flat=False)
+        request_form = request.form.to_dict(flat=False)
+        try:
+            request_data_list = request_form["json_data"]
+            if len(request_data_list) != 1:
+                return "invalid data", 422
+            string_request_data = request_data_list[0]
+            request_data = json.loads(string_request_data)
+            title = str(request_data["title"])
+            body = str(request_data["body"])
+        except Exception:
+            return "invalid data", 422
+        try:
+            images_list = request_files["image"]
+            if len(images_list) > 10:
+                return "invalid data", 422
+            print(images_list)
+        except Exception:
+            return "invalid data", 422
+        images = []
+        try:
+            for image_file in images_list:
+                image = images_func.save_image(image_file, 1600)
+                images.append(image)
+        except Exception:
+            return "image loading error", 422
+        try:
+            post = Post.create(
+                title=title,
+                body=body,
+                statusId=0,
+                createdTime=datetime.now()
+            )
+            post_id = int(post.id)
+            images_of_post_data = []
+            for image_hash in images:
+                images_of_post_data.append({"image_hash": image_hash, "post_id": post_id, "statusId": 0})
+            Post_photo.insert_many(images_of_post_data).execute()
+        except Exception as e:
+            print(e)
+            return "internal server error", 500
+        return jsonify({"message": "success"}), 200
+
+    if request.method == "DELETE":
+        request_data = request.get_json()
+        try:
+            blog_id = int(request_data["blogId"])
+        except Exception:
+            return "invalid data", 422
+        blog = Post.select().where(Post.id == blog_id)
+        if not blog.exists():
+            return "blog not found", 403
+        blog.get().delete_instance()
+        Post_photo.delete().where(Post_photo.post_id == blog_id).execute()
         return jsonify({"message": "success"}), 200
