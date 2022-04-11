@@ -1,8 +1,10 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from playhouse.shortcuts import model_to_dict
+from peewee import fn
 from datetime import datetime
-from database import User, Users_addresses, Order, Shop, Tag, Tag_of_shops
+import math
+from database import User, Users_addresses, Order, Shop, Tag, Tag_of_shops, Review
 from functions import data_ordering
 
 user_api = Blueprint("user_api", __name__)
@@ -204,9 +206,9 @@ def shop_info():
         offset = (page - 1) * page_limit
         if len(db_tags) > 0:
             shops = Shop.select().offset(offset).limit(page_limit).where(Tag_of_shops.tag_id << db_tags)\
-                .join(Tag_of_shops, on=(Shop.id == Tag_of_shops.shop_id))
+                .join(Tag_of_shops, on=(Shop.id == Tag_of_shops.shop_id)).order_by(Shop.id.desc())
         else:
-            shops = Shop.select().offset(offset).limit(page_limit)
+            shops = Shop.select().offset(offset).limit(page_limit).order_by(Shop.id.desc())
         shops_tags = Tag_of_shops.select(Tag_of_shops.shop_id, Tag_of_shops.tag_id, Tag.title)\
             .where(Tag_of_shops.shop_id << shops).join(Tag, on=(Tag_of_shops.tag_id == Tag.id))
         for shop in shops:
@@ -227,49 +229,45 @@ def shops_tags_info():
         return jsonify({"shops_tags": shops_tags}), 200
 
 
-@user_api.route("/review", methods=["GET", "POST"])
+@user_api.route("/add_review", methods=["POST"])
 @jwt_required()
-def reviews_info():
-
-    if request.method == "GET":
-        return "reviews_here"
-        # token_data = get_jwt_identity()
-        # user_id = token_data["user_id"]
-        # user = User.select().where(User.id == user_id)
-        # if not user.exists():
-        #     return "user not found", 403
-        # user_orders = Order.select(Order.id, Order.longId, Order.userId, Order.title, Order.comment, Order.trackNumber,
-        #                            Order.statusId, Order.createdTime) \
-        #     .where(Order.userId == user_id)\
-        #     .order_by(Order.id.desc()).dicts()
-        # for order in list(user_orders):
-        #     order["tracking_link"] = "https://gdeposylka.ru/" + str(order["trackNumber"])
-        # return jsonify({"orders": list(user_orders)}), 200
-
+def add_reviews():
     if request.method == "POST":
-        return "successfully add review"
-        # request_data = request.get_json()
-        # try:
-        #     track_number = str(request_data["track_number"])
-        #     title = str(request_data["title"])
-        #     comment = str(request_data["comment"])
-        # except Exception:
-        #     return "invalid data", 422
-        # token_data = get_jwt_identity()
-        # user_id = token_data["user_id"]
-        # user = User.select().where(User.id == user_id)
-        # if not user.exists():
-        #     return "user not found", 403
-        # if Order.get_or_none(userId=user_id, trackNumber=track_number) is not None:
-        #     return "order with this track number already exists", 409
-        # long_id = data_ordering.make_order_long_id()
-        # Order.create(
-        #     userId=user_id,
-        #     longId=long_id,
-        #     title=title,
-        #     comment=comment,
-        #     statusId=0,
-        #     trackNumber=track_number,
-        #     createdTime=datetime.now()
-        # )
-        # return jsonify({"message": "success"}), 200
+        request_data = request.get_json()
+        try:
+            text = str(request_data["text"])
+        except Exception:
+            return "invalid data", 422
+        token_data = get_jwt_identity()
+        user_id = token_data["user_id"]
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        Review.create(
+            name=0,
+            text=text,
+            createdTime=datetime.now()
+        )
+        return jsonify({"message": "success"}), 200
+
+
+@user_api.route("/reviews", methods=["GET"])
+def reviews_info():
+    if request.method == "GET":
+        page_limit = 24
+        args = request.args.to_dict(flat=False)
+        try:
+            page = int(args["page"][0])
+            if page <= 0:
+                page = 1
+        except Exception:
+            page = 1
+        offset = (page - 1) * page_limit
+        answer = {}
+        reviews = list(Review.select().offset(offset).limit(page_limit).order_by(Review.id.desc()).dicts())
+        answer["reviews"] = reviews
+        if page == 1:
+            reviews_count = int(Review.select(fn.count(Review.id)).get().count)
+            pages_count = math.ceil(reviews_count/page_limit)
+            answer["pages_count"] = pages_count
+        return jsonify(answer), 200

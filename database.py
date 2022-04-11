@@ -134,6 +134,16 @@ class Tag_of_shops(BaseModel):
         table_name = "tag_of_shops"
 
 
+class Review(BaseModel):
+    id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
+    name = TextField(column_name="name")
+    text = TextField(column_name="text")
+    createdTime = DateTimeField(column_name="created_time", null=True)
+
+    class Meta:
+        table_name = "reviews"
+
+
 class Email_message(BaseModel):
     id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
     smtpEmail = TextField(column_name="smtp_email", null=True)
