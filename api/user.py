@@ -244,7 +244,7 @@ def add_reviews():
         if not user.exists():
             return "user not found", 403
         Review.create(
-            name=0,
+            user_id=user_id,
             text=text,
             createdTime=datetime.now()
         )
@@ -264,7 +264,10 @@ def reviews_info():
             page = 1
         offset = (page - 1) * page_limit
         answer = {}
-        reviews = list(Review.select().offset(offset).limit(page_limit).order_by(Review.id.desc()).dicts())
+        reviews = list(Review
+                       .select(Review.text, Review.createdTime, User.name.alias("userName"))
+                       .join(User, on=(Review.user_id == User.id))
+                       .order_by(Review.id.desc()).dicts().offset(offset).limit(page_limit))
         answer["reviews"] = reviews
         if page == 1:
             reviews_count = int(Review.select(fn.count(Review.id)).get().count)

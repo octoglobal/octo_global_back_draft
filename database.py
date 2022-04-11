@@ -136,7 +136,7 @@ class Tag_of_shops(BaseModel):
 
 class Review(BaseModel):
     id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
-    name = TextField(column_name="name")
+    user_id = IntegerField(column_name="user_id")
     text = TextField(column_name="text")
     createdTime = DateTimeField(column_name="created_time", null=True)
 

@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from functools import wraps
 import json
-from database import Shop, Tag_of_shops, Tag
+from database import Shop, Tag_of_shops, Tag, Review
 from functions import images_func
 
 
@@ -91,4 +91,21 @@ def admin_shop_actions():
         except Exception as e:
             print(e)
             return "internal server error", 500
+        return jsonify({"message": "success"}), 200
+
+
+@admin_api.route("/admin/review", methods=["DELETE"])
+@jwt_required()
+# @admin_required
+def admin_review_actions():
+    if request.method == "DELETE":
+        request_data = request.get_json()
+        try:
+            review_id = int(request_data["reviewId"])
+        except Exception:
+            return "invalid data", 422
+        review = Review.select().where(Review.id == review_id)
+        if not review.exists():
+            return "review not found", 403
+        review.get().delete_instance()
         return jsonify({"message": "success"}), 200
