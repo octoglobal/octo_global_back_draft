@@ -272,5 +272,7 @@ def reviews_info():
         if page == 1:
             reviews_count = int(Review.select(fn.count(Review.id)).get().count)
             pages_count = math.ceil(reviews_count/page_limit)
+            if pages_count == 0:
+                pages_count = 1
             answer["pages_count"] = pages_count
         return jsonify(answer), 200
