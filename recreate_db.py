@@ -11,6 +11,10 @@ db.create_tables(tables)
 
 
 admin = User.select().where(User.email == "octoglobal@2083492octoglobal")
+if admin.exists():
+    admin = admin.get()
+    admin.verifiedEmail = True
+    admin.statusId = 9
 
 
 
