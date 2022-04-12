@@ -3,8 +3,8 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from functools import wraps
 import json
 from datetime import datetime
-from database import Shop, Tag_of_shops, Tag, Review, Post, Post_photo
-from functions import images_func
+from database import Shop, Tag_of_shops, Tag, Review, Post, Post_photo, User, Order
+from functions import images_func, data_ordering
 
 
 admin_api = Blueprint("admin_api", __name__)
@@ -207,4 +207,51 @@ def admin_blog_actions():
             return "blog not found", 403
         blog.get().delete_instance()
         Post_photo.delete().where(Post_photo.post_id == blog_id).execute()
+        return jsonify({"message": "success"}), 200
+
+
+@admin_api.route("/admin/orders", methods=["POST", "DELETE"])
+@jwt_required()
+@admin_required
+def admin_orders_actions():
+    if request.method == "POST":
+        request_data = request.get_json()
+        try:
+            track_number = str(request_data["track_number"])
+            title = str(request_data["title"])
+            comment = str(request_data["comment"])
+            user_id = int(request_data["userId"])
+        except Exception:
+            return "invalid data", 422
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        if Order.get_or_none(userId=user_id, trackNumber=track_number) is not None:
+            return "order with this track number already exists", 409
+        long_id = data_ordering.make_order_long_id()
+        Order.create(
+            userId=user_id,
+            longId=long_id,
+            title=title,
+            comment=comment,
+            statusId=1,
+            trackNumber=track_number,
+            createdTime=datetime.now()
+        )
+        return jsonify({"message": "success"}), 200
+
+    if request.method == "DELETE":
+        request_data = request.get_json()
+        try:
+            order_id = str(request_data["orderId"])
+            user_id = int(request_data["userId"])
+        except Exception:
+            return "invalid data", 422
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        order = Order.select().where(Order.id == order_id, Order.userId == user_id)
+        if not order.exists():
+            return "order not found or has an invalid status", 403
+        order.get().delete_instance()
         return jsonify({"message": "success"}), 200
