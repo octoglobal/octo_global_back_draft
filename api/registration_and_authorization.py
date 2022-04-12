@@ -90,7 +90,7 @@ def login():
                                                 Users_addresses.phone, Users_addresses.name, Users_addresses.surname,
                                                 Users_addresses.longitude, Users_addresses.latitude) \
             .where(Users_addresses.userId == user_id, Users_addresses.delete != True)\
-            .order_by(Users_addresses.id.desc()).dicts()
+            .order_by(Users_addresses.id).dicts()
         user["addresses"] = list(user_addresses)
         enough_user_data = data_ordering.get_user_enough_data(user)
         response = jsonify({"user": enough_user_data})
