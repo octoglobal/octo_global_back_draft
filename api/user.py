@@ -204,9 +204,21 @@ def shop_info():
         except Exception:
             db_tags = []
         try:
+            search_string = str(args["search_suggestions"][0])
+            search_results_limit = 3
+            search_shops_startswith = Shop.select(Shop.title, Shop.url)\
+                .where(Shop.title.startswith(search_string)).limit(search_results_limit).order_by(Shop.id.desc())
+            search_shops_contains = Shop.select(Shop.title, Shop.url)\
+                .where(Shop.title.contains(search_string), ~(Shop.title.startswith(search_string)))\
+                .limit(search_results_limit - len(search_shops_startswith)).order_by(Shop.id.desc())
+            search_results = list(search_shops_startswith.dicts()) + list(search_shops_contains.dicts())
+            return jsonify({"search_suggestions_results": search_results}), 200
+        except Exception:
+            pass
+        try:
             search_results = []
             search_string = str(args["search"][0])
-            search_results_limit = 10
+            search_results_limit = 12
             search_shops_startswith = Shop.select()\
                 .where(Shop.title.startswith(search_string)).limit(search_results_limit).order_by(Shop.id.desc())
             search_shops_contains = Shop.select()\
@@ -226,6 +238,17 @@ def shop_info():
             return jsonify({"search_results": search_results}), 200
         except Exception:
             pass
+
+
+
+
+
+
+
+
+
+
+
         offset = (page - 1) * page_limit
         if len(db_tags) > 0:
             shops = Shop.select().offset(offset).limit(page_limit).where(Tag_of_shops.tag_id << db_tags)\
