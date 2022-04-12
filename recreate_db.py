@@ -17,9 +17,6 @@ if admin.exists():
     admin.statusId = 9
     admin.save()
 
-
-
-
 # tags = [
 #     {'id': 1, 'title': 'Автозапчасти'},
 #     {'id': 2, 'title': 'Аксессуары'},
