@@ -83,7 +83,7 @@ def login():
         if db_hashed_password != hashed_password:
             return "wrong password", 403
         identify = {"user_id": user_id, "status": 0}
-        if email == config.admin_email:
+        if email in [config.admin_emails]:
             identify = {"user_id": user_id, "status": 9}
 
         access_token = create_access_token(identity=identify)

@@ -4,6 +4,7 @@ from playhouse.shortcuts import model_to_dict
 from peewee import fn
 from datetime import datetime
 import math
+import itertools
 from database import User, Users_addresses, Order, Shop, Tag, Tag_of_shops, Review, Post, Post_photo
 from functions import data_ordering
 
@@ -180,7 +181,7 @@ def orders_info():
         return jsonify({"message": "success"}), 200
 
 
-@user_api.route("/shops", methods=["GET", "PATCH"])
+@user_api.route("/shops", methods=["GET"])
 def shop_info():
     if request.method == "GET":
         shops_list = []
@@ -200,9 +201,31 @@ def shop_info():
                 except Exception:
                     pass
             db_tags = Tag.select().where(Tag.id << tags)
-
         except Exception:
             db_tags = []
+        try:
+            search_results = []
+            search_string = str(args["search"][0])
+            search_results_limit = 10
+            search_shops_startswith = Shop.select()\
+                .where(Shop.title.startswith(search_string)).limit(search_results_limit).order_by(Shop.id.desc())
+            search_shops_contains = Shop.select()\
+                .where(Shop.title.contains(search_string), ~(Shop.title.startswith(search_string)))\
+                .limit(search_results_limit - len(search_shops_startswith)).order_by(Shop.id.desc())
+            shops_tags = Tag_of_shops.select(Tag_of_shops.shop_id, Tag_of_shops.tag_id, Tag.title)\
+                .where(Tag_of_shops.shop_id << search_shops_startswith | Tag_of_shops.shop_id << search_shops_contains)\
+                .join(Tag, on=(Tag_of_shops.tag_id == Tag.id))
+            for shop in itertools.chain(search_shops_startswith, search_shops_contains):
+                shop_tags_list = []
+                for shop_tag in shops_tags:
+                    if shop.id == shop_tag.shop_id:
+                        shop_tags_list.append({"shop_tag_id": shop_tag.tag_id, "shop_tag_title": shop_tag.tag.title})
+                shop_dict = model_to_dict(shop)
+                shop_dict["tags"] = shop_tags_list
+                search_results.append(shop_dict)
+            return jsonify({"search_results": search_results}), 200
+        except Exception:
+            pass
         offset = (page - 1) * page_limit
         if len(db_tags) > 0:
             shops = Shop.select().offset(offset).limit(page_limit).where(Tag_of_shops.tag_id << db_tags)\
@@ -277,11 +300,11 @@ def reviews_info():
         return jsonify(answer), 200
 
 
-@user_api.route("/blog", methods=["GET", "PATCH"])
+@user_api.route("/blog", methods=["GET"])
 def blog_info():
     if request.method == "GET":
         posts_list = []
-        page_limit = 12
+        page_limit = 10
         args = request.args.to_dict(flat=False)
         try:
             page = int(args["page"][0])

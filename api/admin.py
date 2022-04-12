@@ -89,8 +89,7 @@ def admin_shop_actions():
             for tag in tags:
                 tag_of_posts_data.append({"shop_id": shop_id, "tag_id": tag})
             Tag_of_shops.insert_many(tag_of_posts_data).execute()
-        except Exception as e:
-            print(e)
+        except Exception:
             return "internal server error", 500
         return jsonify({"message": "success"}), 200
 
@@ -112,7 +111,7 @@ def admin_review_actions():
         return jsonify({"message": "success"}), 200
 
 
-@admin_api.route("/admin/blog", methods=["POST", "DELETE"])
+@admin_api.route("/admin/blog", methods=["POST", "PATCH", "DELETE"])
 @jwt_required()
 # @admin_required
 def admin_blog_actions():
@@ -133,7 +132,6 @@ def admin_blog_actions():
             images_list = request_files["image"]
             if len(images_list) > 10:
                 return "invalid data", 422
-            print(images_list)
         except Exception:
             return "invalid data", 422
         images = []
@@ -155,8 +153,52 @@ def admin_blog_actions():
             for image_hash in images:
                 images_of_post_data.append({"image_hash": image_hash, "post_id": post_id, "statusId": 0})
             Post_photo.insert_many(images_of_post_data).execute()
-        except Exception as e:
-            print(e)
+        except Exception:
+            return "internal server error", 500
+        return jsonify({"message": "success"}), 200
+
+    if request.method == "PATCH":
+        request_files = request.files.to_dict(flat=False)
+        request_form = request.form.to_dict(flat=False)
+        try:
+            request_data_list = request_form["json_data"]
+            if len(request_data_list) != 1:
+                return "invalid data", 422
+            string_request_data = request_data_list[0]
+            request_data = json.loads(string_request_data)
+            post_id = int(request_data["blogId"])
+            title = str(request_data["title"])
+            body = str(request_data["body"])
+        except Exception:
+            return "invalid data", 422
+        try:
+            images_list = request_files["image"]
+            if len(images_list) > 10:
+                return "invalid data", 422
+        except Exception:
+            return "invalid data", 422
+        images = []
+        try:
+            for image_file in images_list:
+                image = images_func.save_image(image_file, 1600)
+                images.append(image)
+        except Exception:
+            return "image loading error", 422
+        post = Post.select().where(Post.id == post_id)
+        if not post.exists():
+            return "blog not found", 403
+        try:
+            post = post.get()
+            post.title = title
+            post.body = body
+            post.editedTime = datetime.now()
+            post.save()
+            Post_photo.delete().where(Post_photo.post_id == post_id).execute()
+            images_of_post_data = []
+            for image_hash in images:
+                images_of_post_data.append({"image_hash": image_hash, "post_id": post_id, "statusId": 0})
+            Post_photo.insert_many(images_of_post_data).execute()
+        except Exception:
             return "internal server error", 500
         return jsonify({"message": "success"}), 200
 
