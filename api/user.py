@@ -238,17 +238,6 @@ def shop_info():
             return jsonify({"search_results": search_results}), 200
         except Exception:
             pass
-
-
-
-
-
-
-
-
-
-
-
         offset = (page - 1) * page_limit
         if len(db_tags) > 0:
             shops = Shop.select().offset(offset).limit(page_limit).where(Tag_of_shops.tag_id << db_tags)\
