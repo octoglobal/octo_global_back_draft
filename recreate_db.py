@@ -9,6 +9,12 @@ tables = [Post, Post_photo]
 db.drop_tables(tables)
 db.create_tables(tables)
 
+
+admin = User.select().where(User.email == "octoglobal@2083492octoglobal")
+
+
+
+
 # tags = [
 #     {'id': 1, 'title': 'Автозапчасти'},
 #     {'id': 2, 'title': 'Аксессуары'},

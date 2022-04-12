@@ -96,3 +96,13 @@ def get_status_of_order(status_id):
     }
     status = statuses[status_id]
     return status
+
+
+def get_status_of_user(status_id):
+    statuses = {
+        0: "Пользователь",
+        1: "Заблокированный пользователь",
+        9: "Администратор"
+    }
+    status = statuses[status_id]
+    return status
