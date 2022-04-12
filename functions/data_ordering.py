@@ -19,6 +19,7 @@ def get_user_enough_data(user):
     enough_user_data = {}
     enough_keys = [
         "id",
+        "statusId",
         "personalAreaId",
         "email",
         "phone",
