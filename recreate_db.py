@@ -15,6 +15,7 @@ if admin.exists():
     admin = admin.get()
     admin.verifiedEmail = True
     admin.statusId = 9
+    admin.save()
 
 
 
