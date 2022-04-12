@@ -277,7 +277,7 @@ def add_reviews():
 @user_api.route("/reviews", methods=["GET"])
 def reviews_info():
     if request.method == "GET":
-        page_limit = 24
+        page_limit = 6
         args = request.args.to_dict(flat=False)
         try:
             page = int(args["page"][0])

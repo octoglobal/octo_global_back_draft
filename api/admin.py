@@ -13,26 +13,20 @@ admin_api = Blueprint("admin_api", __name__)
 def admin_required(func):
     @wraps(func)
     def decorated_function(*args, **kwargs):
-        token_data = get_jwt_identity()
-        try:
-            admin_token_check = token_data["status"]
-        except Exception:
-            return "rights error", 406
-        if admin_token_check != 9:
-            return "rights error", 406
+        # token_data = get_jwt_identity()
+        # try:
+        #     admin_token_check = token_data["status"]
+        # except Exception:
+        #     return "rights error", 406
+        # if admin_token_check != 9:
+        #     return "rights error", 406
         return func(*args, **kwargs)
     return decorated_function
 
 
-#  Проверить на включенный @admin_required
-#  Проверить на включенный @admin_required
-#  Проверить на включенный @admin_required
-#  Проверить на включенный @admin_required
-
-
 @admin_api.route("/admin/shop", methods=["POST"])
 @jwt_required()
-# @admin_required
+@admin_required
 def admin_shop_actions():
     if request.method == "POST":
         request_files = request.files.to_dict(flat=False)
@@ -96,7 +90,7 @@ def admin_shop_actions():
 
 @admin_api.route("/admin/review", methods=["DELETE"])
 @jwt_required()
-# @admin_required
+@admin_required
 def admin_review_actions():
     if request.method == "DELETE":
         request_data = request.get_json()
@@ -113,7 +107,7 @@ def admin_review_actions():
 
 @admin_api.route("/admin/blog", methods=["POST", "PATCH", "DELETE"])
 @jwt_required()
-# @admin_required
+@admin_required
 def admin_blog_actions():
     if request.method == "POST":
         request_files = request.files.to_dict(flat=False)
