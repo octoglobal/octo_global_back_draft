@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from functools import wraps
 import json
 from datetime import datetime
-from database import Shop, Tag_of_shops, Tag, Review, Post, Post_photo, User, Order
+from database import Shop, Tag_of_shops, Tag, Review, Post, Post_photo, User, Order, Package
 from functions import images_func, data_ordering
 
 
@@ -262,54 +262,156 @@ def admin_orders_actions():
         return jsonify({"message": "success"}), 200
 
 
+@admin_api.route("/admin/packages", methods=["POST", "DELETE", "PATCH"])
+@jwt_required()
+@admin_required
+def admin_packages_actions():
+    if request.method == "POST":
+        request_data = request.get_json()
+        try:
+            request_orders = request_data["orders"]
+            user_id = int(request_data["userId"])
+            if type(request_orders) != list:
+                return "invalid data", 422
+        except Exception:
+            return "invalid data", 422
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        user_orders = Order.select().where(Order.userId == user_id, Order.statusId == 1, Order.id << request_orders)
+        if len(list(user_orders.dicts())) != len(request_orders):
+            return jsonify({"error": "Не все посылки из списка готовы к объединению"}), 460
+        long_id = data_ordering.make_package_long_id()
+        package = Package.create(
+            longId=long_id,
+            userId=user_id,
+            statusId=1,
+            createdTime=datetime.now(),
+            agreementToConsolidationTime=datetime.now()
+        )
+        package_id = package.id
+        query = Order.update(statusId=2, packageId=package_id)\
+            .where(Order.userId == user_id, Order.statusId == 1, Order.id << request_orders)
+        query.execute()
+        return jsonify({"message": "success"}), 200
+
+    if request.method == "PATCH":
+        request_data = request.get_json()
+        try:
+            user_id = int(request_data["userId"])
+            package_id = int(request_data["packageId"])
+        except Exception:
+            return "invalid data", 422
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        package = Package.select().where(Package.id == package_id, Package.userId == user_id, Package.statusId == 0)
+        if not package.exists():
+            return "package not found", 403
+        package = package.get()
+        package.statusId = 1
+        package.agreementToConsolidationTime = datetime.now()
+        package.save()
+        return jsonify({"message": "success"}), 200
+
+    if request.method == "DELETE":
+        request_data = request.get_json()
+        try:
+            user_id = int(request_data["userId"])
+            package_id = request_data["packageId"]
+        except Exception:
+            return "invalid data", 422
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        package = Package.select()\
+            .where(Package.id == package_id,
+                   Package.userId == user_id,
+                   ((Package.statusId == 0) | (Package.statusId == 1)))
+        if not package.exists():
+            return "package not found", 403
+        user_orders = Order.select() \
+            .where(Order.userId == user_id,
+                   Order.statusId == 2,
+                   Order.packageId == package_id,
+                   Package.id == package_id,
+                   Package.userId == user_id,
+                   ((Package.statusId == 0) | (Package.statusId == 1)))\
+            .join(Package, on=(Order.packageId == Package.id))
+        Order.update(statusId=1, packageId=None).where(Order.id << user_orders).execute()
+        package.get().delete_instance()
+        return jsonify({"message": "success"}), 200
 
 
+@admin_api.route("/admin/package_track", methods=["POST", "DELETE"])
+@jwt_required()
+@admin_required
+def admin_package_track_actions():
+    if request.method == "POST":
+        request_data = request.get_json()
+        try:
+            track_number = str(request_data["trackNumber"])
+            user_id = int(request_data["userId"])
+            package_id = int(request_data["packageId"])
+        except Exception:
+            return "invalid data", 422
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        package = Package.select().where(Package.id == package_id, Package.userId == user_id, Package.statusId == 1)
+        if not package.exists():
+            return "package not found", 403
+        package = package.get()
+        package.statusId = 2
+        package.trackNumber = track_number
+        package.dispatchTime = datetime.now()
+        package.save()
+        return jsonify({"message": "success"}), 200
+
+    if request.method == "DELETE":
+        request_data = request.get_json()
+        try:
+            user_id = int(request_data["userId"])
+            package_id = request_data["packageId"]
+        except Exception:
+            return "invalid data", 422
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        package = Package.select().where(Package.id == package_id, Package.userId == user_id, Package.statusId == 2)
+        if not package.exists():
+            return "package not found", 403
+        package = package.get()
+        package.statusId = 1
+        package.trackNumber = None
+        package.dispatchTime = None
+        package.save()
+        return jsonify({"message": "success"}), 200
 
 
-
-
-
-
-# @admin_api.route("/admin/packages", methods=["POST"])
-# @jwt_required()
-# @admin_required
-# def admin_packages_actions():
-#     if request.method == "POST":
-#         request_data = request.get_json()
-#         try:
-#             orders = request_data["orders"]
-#             track_number = str(request_data["trackNumber"])
-#             user_id = int(request_data["userId"])
-#             if type(orders) != list:
-#                 return "invalid data", 422
-#         except Exception:
-#             return "invalid data", 422
-#
-#         print(user_id)
-#         print(track_number)
-#         print(orders)
-#
-#         user = User.select().where(User.id == user_id)
-#         if not user.exists():
-#             return "user not found", 403
-#
-#         try:
-#             print("1111")
-#
-#         except Exception:
-#             return "123123123123"
-#
-#
-#         # if Order.get_or_none(userId=user_id, trackNumber=track_number) is not None:
-#         #     return "order with this track number already exists", 409
-#         # long_id = data_ordering.make_order_long_id()
-#         # Order.create(
-#         #     userId=user_id,
-#         #     longId=long_id,
-#         #     title=title,
-#         #     comment=comment,
-#         #     statusId=1,
-#         #     trackNumber=track_number,
-#         #     createdTime=datetime.now()
-#         # )
-#         return jsonify({"message": "success"}), 200
+@admin_api.route("/admin/block_user", methods=["POST"])
+@jwt_required()
+@admin_required
+def admin_user_block_actions():
+    if request.method == "POST":
+        request_data = request.get_json()
+        token_data = get_jwt_identity()
+        self_id = token_data["user_id"]
+        try:
+            user_id = int(request_data["userId"])
+            block = request_data["block"]
+            if type(block) != bool:
+                return "invalid data", 422
+        except Exception:
+            return "invalid data", 422
+        if block:
+            user_status = 1
+        else:
+            user_status = 0
+        user = User.select().where(User.id == user_id)
+        if not user.exists() or user_id == self_id:
+            return "user not found", 403
+        user = user.get()
+        user.statusId = user_status
+        user.save()
+        return jsonify({"message": "success"}), 200

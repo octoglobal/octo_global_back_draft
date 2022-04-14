@@ -14,8 +14,16 @@ reg_and_auth = Blueprint("reg_and_auth", __name__)
 @reg_and_auth.route("/refresh", methods=["GET"])
 @jwt_required(refresh=True)
 def refresh():
-
     if request.method == "GET":
+        identity = get_jwt_identity()
+        user_id = identity["user_id"]
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        user = user.get()
+        user_status = user.statusId
+        if user_status == 1:
+            return "rights error", 406
         access_token = create_access_token(identity=get_jwt_identity())
         response = jsonify({"message": "success"})
         set_access_cookies(response, access_token)
@@ -73,6 +81,9 @@ def login():
         if not user.exists():
             return "user not found", 403
         user = user.get()
+        user_status = user.statusId
+        if user_status == 1:
+            return "rights error", 406
         user.lastLoginTime = datetime.now()
         user.save()
         privat_salt = user.salt

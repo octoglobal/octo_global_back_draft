@@ -347,7 +347,7 @@ def blog_info():
         return jsonify(answer), 200
 
 
-@user_api.route("/user/packages", methods=["POST", "DELETE"])
+@user_api.route("/user/packages", methods=["POST"])
 @jwt_required()
 def user_packages_actions():
     if request.method == "POST":
