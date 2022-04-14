@@ -3,7 +3,7 @@ import random
 from peewee import fn
 from base64 import b64encode
 from hashlib import sha256
-from database import User, Order
+from database import User, Order, Package
 
 
 def password_hash(password, privat_salt):
@@ -89,11 +89,44 @@ def make_order_long_id():
     return long_id
 
 
+def make_package_long_id():
+    minimum_id = 1000
+    id_step = 1000
+    max_id = Package.select(fn.MAX(Package.longId)).scalar()
+    if max_id is None:
+        max_id = minimum_id
+    max_id = int(max_id)
+    id_index = (max_id - minimum_id) // id_step
+    left_id = minimum_id + id_step * id_index
+    right_id = left_id + id_step - 1
+    busy_ids_dict = list(
+        Package.select(Package.longId).where(Package.longId >= left_id, Package.longId <= right_id).dicts()
+    )
+    busy_ids_list = [int(temp["longId"]) for temp in busy_ids_dict]
+    from_left_to_right_id_list = list(range(left_id, right_id + 1))
+    freedom_ids = [temp for temp in from_left_to_right_id_list if temp not in busy_ids_list]
+    if len(freedom_ids) == 0:
+        long_id = random.randint(left_id + id_step, right_id + id_step)
+    else:
+        long_id = random.choice(freedom_ids)
+    return long_id
+
+
 def get_status_of_order(status_id):
     statuses = {
         0: "В обработке (Добавленно пользователем)",
         1: "Доставленно на склад в стране заказа, ждет формирования посылки (Добавленно администратором)",
-        3: "Включен в состав посылки"
+        2: "Включен в состав посылки"
+    }
+    status = statuses[status_id]
+    return status
+
+
+def get_status_of_package(status_id):
+    statuses = {
+        0: "Сконсолидировано пользователем, ждет присвоения трек номера администратором",
+        1: "Сконсолидировано или подтверждено администратором",
+        2: "Отправлено, имеет трек номер",
     }
     status = statuses[status_id]
     return status

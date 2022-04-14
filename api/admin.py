@@ -260,3 +260,56 @@ def admin_orders_actions():
             return "order not found or has an invalid status", 403
         order.get().delete_instance()
         return jsonify({"message": "success"}), 200
+
+
+
+
+
+
+
+
+
+
+# @admin_api.route("/admin/packages", methods=["POST"])
+# @jwt_required()
+# @admin_required
+# def admin_packages_actions():
+#     if request.method == "POST":
+#         request_data = request.get_json()
+#         try:
+#             orders = request_data["orders"]
+#             track_number = str(request_data["trackNumber"])
+#             user_id = int(request_data["userId"])
+#             if type(orders) != list:
+#                 return "invalid data", 422
+#         except Exception:
+#             return "invalid data", 422
+#
+#         print(user_id)
+#         print(track_number)
+#         print(orders)
+#
+#         user = User.select().where(User.id == user_id)
+#         if not user.exists():
+#             return "user not found", 403
+#
+#         try:
+#             print("1111")
+#
+#         except Exception:
+#             return "123123123123"
+#
+#
+#         # if Order.get_or_none(userId=user_id, trackNumber=track_number) is not None:
+#         #     return "order with this track number already exists", 409
+#         # long_id = data_ordering.make_order_long_id()
+#         # Order.create(
+#         #     userId=user_id,
+#         #     longId=long_id,
+#         #     title=title,
+#         #     comment=comment,
+#         #     statusId=1,
+#         #     trackNumber=track_number,
+#         #     createdTime=datetime.now()
+#         # )
+#         return jsonify({"message": "success"}), 200

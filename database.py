@@ -43,6 +43,7 @@ class Order(BaseModel):
     id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
     longId = IntegerField(column_name="long_id", unique=True)
     userId = IntegerField(column_name="user_id")
+    packageId = IntegerField(column_name="package_id", null=True)
     title = TextField(column_name="title", null=True)
     comment = TextField(column_name="comment", null=True)
     trackNumber = TextField(column_name="track_number")
@@ -61,11 +62,9 @@ class Package(BaseModel):
     longId = IntegerField(column_name="long_id", unique=True)
     userId = IntegerField(column_name="user_id")
     statusId = IntegerField(column_name="status_id", null=True)
-
-    title = TextField(column_name="title", null=True)
-    comment = TextField(column_name="comment", null=True)
-    trackNumber = TextField(column_name="track_number")
-
+    # title = TextField(column_name="title", null=True)
+    # comment = TextField(column_name="comment", null=True)
+    trackNumber = TextField(column_name="track_number", null=True)
     createdTime = DateTimeField(column_name="created_time", null=True)
     agreementToConsolidationTime = DateTimeField(column_name="agreement_to_consolidation_time", null=True)
     dispatchTime = DateTimeField(column_name="dispatch_time", null=True)

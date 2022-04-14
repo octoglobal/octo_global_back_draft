@@ -5,7 +5,7 @@ from peewee import fn
 from datetime import datetime
 import math
 import itertools
-from database import User, Users_addresses, Order, Shop, Tag, Tag_of_shops, Review, Post, Post_photo
+from database import User, Users_addresses, Order, Shop, Tag, Tag_of_shops, Review, Post, Post_photo, Package
 from functions import data_ordering
 
 user_api = Blueprint("user_api", __name__)
@@ -345,3 +345,57 @@ def blog_info():
                 pages_count = 1
             answer["pages_count"] = pages_count
         return jsonify(answer), 200
+
+
+@user_api.route("/user/packages", methods=["POST", "DELETE"])
+@jwt_required()
+def user_packages_actions():
+    if request.method == "POST":
+        request_data = request.get_json()
+        try:
+            request_orders = request_data["orders"]
+            if type(request_orders) != list:
+                return "invalid data", 422
+        except Exception:
+            return "invalid data", 422
+        token_data = get_jwt_identity()
+        user_id = token_data["user_id"]
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        user_orders = Order.select().where(Order.userId == user_id, Order.statusId == 1, Order.id << request_orders)
+        if len(list(user_orders.dicts())) != len(request_orders):
+            return jsonify({"error": "Не все посылки из списка готовы к объединению"}), 460
+        long_id = data_ordering.make_package_long_id()
+        package = Package.create(
+            longId=long_id,
+            userId=user_id,
+            statusId=0,
+            createdTime=datetime.now()
+        )
+        package_id = package.id
+        query = Order.update(statusId=2, packageId=package_id)\
+            .where(Order.userId == user_id, Order.statusId == 1, Order.id << request_orders)
+        query.execute()
+        return jsonify({"message": "success"}), 200
+
+    # if request.method == "DELETE":
+    #     request_data = request.get_json()
+    #     try:
+    #         package_id = request_data["packageId"]
+    #     except Exception:
+    #         return "invalid data", 422
+    #     token_data = get_jwt_identity()
+    #     user_id = token_data["user_id"]
+    #     user = User.select().where(User.id == user_id)
+    #     if not user.exists():
+    #         return "user not found", 403
+    #     package = Package.select().where(Package.id == package_id)
+    #     if not package.exists():
+    #         return "package not found", 403
+    #     user_orders = Order.select() \
+    #         .where(Order.userId == user_id, Order.statusId == 2, Order.packageId == package_id, Package.statusId == 0) \
+    #         .join(Package, on=(Order.packageId == Package.id))
+    #     Order.update(statusId=1, packageId=None).where(Order.id << user_orders).execute()
+    #     package.get().delete_instance()
+    #     return jsonify({"message": "success"}), 200
