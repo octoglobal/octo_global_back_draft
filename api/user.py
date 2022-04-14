@@ -254,7 +254,7 @@ def shop_info():
             shop_dict = model_to_dict(shop)
             shop_dict["tags"] = shop_tags_list
             shops_list.append(shop_dict)
-        return jsonify({"shops": shops_list}), 200
+        return jsonify({"shops": shops_list, "postsOnPage": page_limit}), 200
 
 
 @user_api.route("/shops_tags", methods=["GET", "PATCH"])
