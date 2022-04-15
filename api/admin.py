@@ -6,7 +6,6 @@ from datetime import datetime
 from database import Shop, Tag_of_shops, Tag, Review, Post, Post_photo, User, Order, Package
 from functions import images_func, data_ordering
 
-
 admin_api = Blueprint("admin_api", __name__)
 
 
@@ -21,6 +20,7 @@ def admin_required(func):
         # if admin_token_check != 9:
         #     return "rights error", 406
         return func(*args, **kwargs)
+
     return decorated_function
 
 
@@ -290,7 +290,7 @@ def admin_packages_actions():
             agreementToConsolidationTime=datetime.now()
         )
         package_id = package.id
-        query = Order.update(statusId=2, packageId=package_id)\
+        query = Order.update(statusId=2, packageId=package_id) \
             .where(Order.userId == user_id, Order.statusId == 1, Order.id << request_orders)
         query.execute()
         return jsonify({"message": "success"}), 200
@@ -324,7 +324,7 @@ def admin_packages_actions():
         user = User.select().where(User.id == user_id)
         if not user.exists():
             return "user not found", 403
-        package = Package.select()\
+        package = Package.select() \
             .where(Package.id == package_id,
                    Package.userId == user_id,
                    ((Package.statusId == 0) | (Package.statusId == 1)))
@@ -336,7 +336,7 @@ def admin_packages_actions():
                    Order.packageId == package_id,
                    Package.id == package_id,
                    Package.userId == user_id,
-                   ((Package.statusId == 0) | (Package.statusId == 1)))\
+                   ((Package.statusId == 0) | (Package.statusId == 1))) \
             .join(Package, on=(Order.packageId == Package.id))
         Order.update(statusId=1, packageId=None).where(Order.id << user_orders).execute()
         package.get().delete_instance()
@@ -415,3 +415,84 @@ def admin_user_block_actions():
         user.statusId = user_status
         user.save()
         return jsonify({"message": "success"}), 200
+
+
+@admin_api.route("/admin/search", methods=["GET"])
+@jwt_required()
+@admin_required
+def admin_search_actions():
+    if request.method == "GET":
+
+        # page_limit = 12
+        search_results_limit = 5
+        args = request.args.to_dict(flat=False)
+        # try:
+        #     page = int(args["page"][0])
+        #     if page <= 0:
+        #         page = 1
+        # except Exception:
+        #     page = 1
+
+        try:
+            search_string = str(args["search_suggestions"][0])
+            user_long_id_search = list(User.select(User.personalAreaId, User.id)
+                                       .where(User.personalAreaId.cast("TEXT").contains(search_string))
+                                       .limit(search_results_limit).order_by(User.personalAreaId).dicts())
+            order_long_id_search = list(Order.select(Order.longId, Order.id)
+                                        .where(Order.longId.cast("TEXT").contains(search_string))
+                                        .limit(search_results_limit).order_by(Order.longId).dicts())
+            order_track_number_search = list(Order.select(Order.trackNumber, Order.id)
+                                             .where(Order.trackNumber.contains(search_string))
+                                             .limit(search_results_limit).order_by(Order.trackNumber).dicts())
+            search_results = {
+                "users": user_long_id_search,
+                "orders_numbers": order_long_id_search,
+                "orders_track_numbers": order_track_number_search
+            }
+            return jsonify({"search_suggestions_results": search_results}), 200
+        except Exception as e:
+            print(e)
+            pass
+
+        return "temp"
+
+        # try:
+        #     search_results = []
+        #     search_string = str(args["search"][0])
+        #     search_results_limit = 12
+        #     search_shops_startswith = Shop.select() \
+        #         .where(Shop.title.startswith(search_string)).limit(search_results_limit).order_by(Shop.title)
+        #     search_shops_contains = Shop.select() \
+        #         .where(Shop.title.contains(search_string), ~(Shop.title.startswith(search_string))) \
+        #         .limit(search_results_limit - len(search_shops_startswith)).order_by(Shop.title)
+        #     shops_tags = Tag_of_shops.select(Tag_of_shops.shop_id, Tag_of_shops.tag_id, Tag.title) \
+        #         .where(Tag_of_shops.shop_id << search_shops_startswith | Tag_of_shops.shop_id << search_shops_contains) \
+        #         .join(Tag, on=(Tag_of_shops.tag_id == Tag.id))
+        #     for shop in itertools.chain(search_shops_startswith, search_shops_contains):
+        #         shop_tags_list = []
+        #         for shop_tag in shops_tags:
+        #             if shop.id == shop_tag.shop_id:
+        #                 shop_tags_list.append({"shop_tag_id": shop_tag.tag_id, "shop_tag_title": shop_tag.tag.title})
+        #         shop_dict = model_to_dict(shop)
+        #         shop_dict["tags"] = shop_tags_list
+        #         search_results.append(shop_dict)
+        #     return jsonify({"search_results": search_results}), 200
+        # except Exception:
+        #     pass
+        # offset = (page - 1) * page_limit
+        # if len(db_tags) > 0:
+        #     shops = Shop.select().offset(offset).limit(page_limit).where(Tag_of_shops.tag_id << db_tags) \
+        #         .join(Tag_of_shops, on=(Shop.id == Tag_of_shops.shop_id)).order_by(Shop.title).group_by(Shop.id)
+        # else:
+        #     shops = Shop.select().offset(offset).limit(page_limit).order_by(Shop.title)
+        # shops_tags = Tag_of_shops.select(Tag_of_shops.shop_id, Tag_of_shops.tag_id, Tag.title) \
+        #     .where(Tag_of_shops.shop_id << shops).join(Tag, on=(Tag_of_shops.tag_id == Tag.id))
+        # for shop in shops:
+        #     shop_tags_list = []
+        #     for shop_tag in shops_tags:
+        #         if shop.id == shop_tag.shop_id:
+        #             shop_tags_list.append({"shop_tag_id": shop_tag.tag_id, "shop_tag_title": shop_tag.tag.title})
+        #     shop_dict = model_to_dict(shop)
+        #     shop_dict["tags"] = shop_tags_list
+        #     shops_list.append(shop_dict)
+        # return jsonify({"shops": shops_list, "postsOnPage": page_limit}), 200
