@@ -289,7 +289,6 @@ def add_reviews():
 @user_api.route("/reviews", methods=["GET"])
 def reviews_info():
     if request.method == "GET":
-        page_limit = 6
         args = request.args.to_dict(flat=False)
         try:
             page = int(args["page"][0])
@@ -297,6 +296,12 @@ def reviews_info():
                 page = 1
         except Exception:
             page = 1
+        try:
+            page_limit = int(args["page_limit"][0])
+            if page_limit <= 0 or page_limit > 100:
+                page_limit = 6
+        except Exception:
+            page_limit = 6
         offset = (page - 1) * page_limit
         reviews = list(Review
                        .select(Review.id, Review.text, Review.createdTime, User.name.alias("userName"))
