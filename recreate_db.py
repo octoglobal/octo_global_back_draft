@@ -1,10 +1,10 @@
 from database import db, User, Order, Post, Shop, Error, Email_message, Users_addresses, Package, Tag_of_shops, \
-    Tag, Review, Post_photo
+    Tag, Review, Post_product
 from datetime import datetime
 
 now = datetime.now()
 # tables = [User, Order, Post, Shop, Error, Email_message, Users_addresses, Package, Tag_of_shops, Tag]
-tables = [Package, Order]
+tables = [Package, Order, Post, Post_product]
 
 db.drop_tables(tables)
 db.create_tables(tables)

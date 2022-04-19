@@ -104,14 +104,26 @@ class Post(BaseModel):
         table_name = "posts"
 
 
-class Post_photo(BaseModel):
+class Post_product(BaseModel):
     id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
-    post_id = IntegerField(column_name="post_id")
-    image_hash = TextField(column_name="image_hash")
-    statusId = IntegerField(column_name="status_id", null=True)
+    postId = IntegerField(column_name="post_id", null=True)
+    title = TextField(column_name="title", null=True)
+    body = TextField(column_name="body", null=True)
+    photo = TextField(column_name="photo", null=True)
+    url = TextField(column_name="url", null=True)
 
     class Meta:
-        table_name = "post_photo"
+        table_name = "post_product"
+
+
+# class Post_photo(BaseModel):
+#     id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
+#     post_id = IntegerField(column_name="post_id")
+#     image_hash = TextField(column_name="image_hash")
+#     statusId = IntegerField(column_name="status_id", null=True)
+#
+#     class Meta:
+#         table_name = "post_photo"
 
 
 class Shop(BaseModel):

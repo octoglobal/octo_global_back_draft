@@ -5,7 +5,7 @@ from peewee import fn
 from datetime import datetime
 import math
 import itertools
-from database import User, Users_addresses, Order, Shop, Tag, Tag_of_shops, Review, Post, Post_photo, Package
+from database import User, Users_addresses, Order, Shop, Tag, Tag_of_shops, Review, Post, Post_product, Package
 from functions import data_ordering
 
 user_api = Blueprint("user_api", __name__)
@@ -321,7 +321,6 @@ def reviews_info():
 def blog_info():
     if request.method == "GET":
         posts_list = []
-        page_limit = 10
         args = request.args.to_dict(flat=False)
         try:
             page = int(args["page"][0])
@@ -329,18 +328,31 @@ def blog_info():
                 page = 1
         except Exception:
             page = 1
+        try:
+            page_limit = int(args["page_limit"][0])
+            if page_limit <= 0 or page_limit > 100:
+                page_limit = 10
+        except Exception:
+            page_limit = 10
         offset = (page - 1) * page_limit
         posts = Post.select().offset(offset).limit(page_limit).order_by(Post.id.desc())
-        post_photos = Post_photo.select(Post_photo.id, Post_photo.post_id, Post_photo.image_hash)\
-            .where(Post_photo.post_id << posts).order_by(Post_photo.id)
+        post_products = Post_product\
+            .select(Post_product.id, Post_product.postId, Post_product.title, Post_product.body,
+                    Post_product.photo, Post_product.url)\
+            .where(Post_product.postId << posts).order_by(Post_product.id)
         for post in posts:
-            post_photo_list = []
-            for post_photo in post_photos:
-                if post.id == post_photo.post_id:
-                    post_photo_list.append({"photo_id": post_photo.id, "photo_hash": post_photo.image_hash})
+            post_products_list = []
+            for post_product in post_products:
+                if post.id == post_product.postId:
+                    post_products_list.append({
+                        "title": post_product.title,
+                        "body": post_product.body,
+                        "photo": post_product.photo,
+                        "url": post_product.url
+                    })
             post_dict = model_to_dict(post)
             del post_dict["statusId"]
-            post_dict["photos"] = post_photo_list
+            post_dict["products"] = post_products_list
             posts_list.append(post_dict)
         answer = {"posts": posts_list}
         if page == 1:

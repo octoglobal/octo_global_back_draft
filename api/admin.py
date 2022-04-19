@@ -1,9 +1,10 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from functools import wraps
+from playhouse.shortcuts import model_to_dict
 import json
 from datetime import datetime
-from database import Shop, Tag_of_shops, Tag, Review, Post, Post_photo, User, Order, Package
+from database import Shop, Tag_of_shops, Tag, Review, Post, Post_product, User, Order, Package, Users_addresses
 from functions import images_func, data_ordering
 
 admin_api = Blueprint("admin_api", __name__)
@@ -105,99 +106,60 @@ def admin_review_actions():
         return jsonify({"message": "success"}), 200
 
 
-@admin_api.route("/admin/blog", methods=["POST", "PATCH", "DELETE"])
+@admin_api.route("/admin/blog", methods=["POST", "DELETE"])
 @jwt_required()
 @admin_required
 def admin_blog_actions():
     if request.method == "POST":
         request_files = request.files.to_dict(flat=False)
         request_form = request.form.to_dict(flat=False)
+        post = {}
+        post_products = []
         try:
             request_data_list = request_form["json_data"]
             if len(request_data_list) != 1:
                 return "invalid data", 422
             string_request_data = request_data_list[0]
             request_data = json.loads(string_request_data)
-            title = str(request_data["title"])
-            body = str(request_data["body"])
+            post["title"] = str(request_data["title"])
+            post["body"] = str(request_data["body"])
+            post_products_check = list(request_data["products"])
+            for product_index in range(3):
+                post_product = {
+                    "title": post_products_check[product_index]["title"],
+                    "body": post_products_check[product_index]["body"],
+                    "url": post_products_check[product_index]["url"]
+                }
+                post_products.append(post_product)
         except Exception:
             return "invalid data", 422
         try:
             images_list = request_files["image"]
-            if len(images_list) > 10:
+            if len(images_list) != 3:
                 return "invalid data", 422
         except Exception:
             return "invalid data", 422
-        images = []
+        products_images = []
         try:
             for image_file in images_list:
                 image = images_func.save_image(image_file, 1600)
-                images.append(image)
+                products_images.append(image)
         except Exception:
             return "image loading error", 422
         try:
             post = Post.create(
-                title=title,
-                body=body,
+                title=post["title"],
+                body=post["body"],
                 statusId=0,
                 createdTime=datetime.now()
             )
             post_id = int(post.id)
-            images_of_post_data = []
-            for image_hash in images:
-                images_of_post_data.append({"image_hash": image_hash, "post_id": post_id, "statusId": 0})
-            Post_photo.insert_many(images_of_post_data).execute()
-        except Exception:
-            return "internal server error", 500
-        return jsonify({"message": "success"}), 200
-
-    if request.method == "PATCH":
-        request_files = request.files.to_dict(flat=False)
-        request_form = request.form.to_dict(flat=False)
-        try:
-            request_data_list = request_form["json_data"]
-            if len(request_data_list) != 1:
-                return "invalid data", 422
-            string_request_data = request_data_list[0]
-            request_data = json.loads(string_request_data)
-            post_id = int(request_data["blogId"])
-            title = str(request_data["title"])
-            body = str(request_data["body"])
-        except Exception:
-            return "invalid data", 422
-        try:
-            images_list = request_files["image"]
-            hash_list = request_form["image"]
-
-            print(images_list)
-            print(hash_list)
-
-            if len(images_list) > 10:
-                return "invalid data", 422
-        except Exception:
-            return "invalid data", 422
-        images = []
-        try:
-            for image_file in images_list:
-                image = images_func.save_image(image_file, 1600)
-                images.append(image)
-        except Exception:
-            return "image loading error", 422
-        post = Post.select().where(Post.id == post_id)
-        if not post.exists():
-            return "blog not found", 403
-        try:
-            post = post.get()
-            post.title = title
-            post.body = body
-            post.editedTime = datetime.now()
-            post.save()
-            Post_photo.delete().where(Post_photo.post_id == post_id).execute()
-            images_of_post_data = []
-            for image_hash in images:
-                images_of_post_data.append({"image_hash": image_hash, "post_id": post_id, "statusId": 0})
-            Post_photo.insert_many(images_of_post_data).execute()
-        except Exception:
+            for index, post_product in enumerate(post_products):
+                post_product["postId"] = post_id
+                post_product["photo"] = products_images[index]
+            Post_product.insert_many(post_products).execute()
+        except Exception as e:
+            print(e)
             return "internal server error", 500
         return jsonify({"message": "success"}), 200
 
@@ -211,7 +173,7 @@ def admin_blog_actions():
         if not blog.exists():
             return "blog not found", 403
         blog.get().delete_instance()
-        Post_photo.delete().where(Post_photo.post_id == blog_id).execute()
+        Post_product.delete().where(Post_product.postId == blog_id).execute()
         return jsonify({"message": "success"}), 200
 
 
@@ -417,12 +379,35 @@ def admin_user_block_actions():
         return jsonify({"message": "success"}), 200
 
 
+@admin_api.route("/admin/user/<user_id>", methods=["GET"])
+@jwt_required()
+@admin_required
+def admin_user_actions(user_id):
+    if request.method == "GET":
+        try:
+            user_id = int(user_id)
+        except Exception:
+            return "invalid data", 422
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        user = user.get()
+        user = model_to_dict(user)
+        user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address_string,
+                                                Users_addresses.phone, Users_addresses.name, Users_addresses.surname,
+                                                Users_addresses.longitude, Users_addresses.latitude) \
+            .where(Users_addresses.userId == user_id, Users_addresses.delete != True) \
+            .order_by(Users_addresses.id).dicts()
+        user["addresses"] = list(user_addresses)
+        enough_user_data = data_ordering.get_user_enough_data(user)
+        return jsonify({"user": enough_user_data}), 200
+
+
 @admin_api.route("/admin/search", methods=["GET"])
 @jwt_required()
 @admin_required
 def admin_search_actions():
     if request.method == "GET":
-
         search_results_limit = 5
         args = request.args.to_dict(flat=False)
         try:
