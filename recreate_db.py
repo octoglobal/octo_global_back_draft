@@ -4,7 +4,7 @@ from datetime import datetime
 
 now = datetime.now()
 # tables = [User, Order, Post, Shop, Error, Email_message, Users_addresses, Package, Tag_of_shops, Tag]
-tables = []
+tables = [Package, Order]
 
 db.drop_tables(tables)
 db.create_tables(tables)

@@ -118,7 +118,7 @@ def address_info():
         return jsonify({"message": "success"}), 200
 
 
-@user_api.route("/user/orders", methods=["GET", "POST", "DELETE"])
+@user_api.route("/user/orders", methods=["GET", "POST"])
 @jwt_required()
 def orders_info():
 
@@ -163,22 +163,22 @@ def orders_info():
         )
         return jsonify({"message": "success"}), 200
 
-    if request.method == "DELETE":
-        request_data = request.get_json()
-        try:
-            order_id = str(request_data["orderId"])
-        except Exception:
-            return "invalid data", 422
-        token_data = get_jwt_identity()
-        user_id = token_data["user_id"]
-        user = User.select().where(User.id == user_id)
-        if not user.exists():
-            return "user not found", 403
-        order = Order.select().where(Order.id == order_id, Order.userId == user_id, Order.statusId == 0)
-        if not order.exists():
-            return "order not found or has an invalid status", 403
-        order.get().delete_instance()
-        return jsonify({"message": "success"}), 200
+    # if request.method == "DELETE":
+    #     request_data = request.get_json()
+    #     try:
+    #         order_id = str(request_data["orderId"])
+    #     except Exception:
+    #         return "invalid data", 422
+    #     token_data = get_jwt_identity()
+    #     user_id = token_data["user_id"]
+    #     user = User.select().where(User.id == user_id)
+    #     if not user.exists():
+    #         return "user not found", 403
+    #     order = Order.select().where(Order.id == order_id, Order.userId == user_id, Order.statusId == 0)
+    #     if not order.exists():
+    #         return "order not found or has an invalid status", 403
+    #     order.get().delete_instance()
+    #     return jsonify({"message": "success"}), 200
 
 
 @user_api.route("/shops", methods=["GET"])
@@ -364,7 +364,7 @@ def blog_info():
         return jsonify(answer), 200
 
 
-@user_api.route("/user/packages", methods=["POST"])
+@user_api.route("/user/package", methods=["POST"])
 @jwt_required()
 def user_packages_actions():
     if request.method == "POST":
@@ -396,6 +396,37 @@ def user_packages_actions():
         query.execute()
         return jsonify({"message": "success"}), 200
 
+
+@user_api.route("/user/package/address", methods=["POST"])
+@jwt_required()
+def user_packages_address_actions():
+    if request.method == "POST":
+        request_data = request.get_json()
+        try:
+            package_id = request_data["packageId"]
+            address_id = request_data["addressId"]
+        except Exception:
+            return "invalid data", 422
+        token_data = get_jwt_identity()
+        user_id = token_data["user_id"]
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        user_address = Users_addresses.select()\
+            .where(Users_addresses.userId == user_id, Users_addresses.id == address_id)
+        if not user_address.exists():
+            return "address not found", 403
+        package = Package.select().where(Package.id == package_id, Package.userId == user_id,
+                                         ((Package.statusId == 0) | (Package.statusId == 1)))
+        if not package.exists():
+            return "package not found", 403
+        package = package.get()
+        package.addressId = address_id
+        package.statusId = 2
+        package.save()
+        return jsonify({"message": "success"}), 200
+
+
     # if request.method == "DELETE":
     #     request_data = request.get_json()
     #     try:
@@ -411,7 +442,8 @@ def user_packages_actions():
     #     if not package.exists():
     #         return "package not found", 403
     #     user_orders = Order.select() \
-    #         .where(Order.userId == user_id, Order.statusId == 2, Order.packageId == package_id, Package.statusId == 0) \
+    #         .where(Order.userId == user_id, Order.statusId == 2,
+    #         Order.packageId == package_id, Package.statusId == 0) \
     #         .join(Package, on=(Order.packageId == Package.id))
     #     Order.update(statusId=1, packageId=None).where(Order.id << user_orders).execute()
     #     package.get().delete_instance()

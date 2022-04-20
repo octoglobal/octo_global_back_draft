@@ -61,7 +61,7 @@ class Package(BaseModel):
     id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
     longId = IntegerField(column_name="long_id", unique=True)
     userId = IntegerField(column_name="user_id")
-    # addressId = IntegerField(column_name="address_id")
+    addressId = IntegerField(column_name="address_id", null=True)
     statusId = IntegerField(column_name="status_id", null=True)
     # title = TextField(column_name="title", null=True)
     # comment = TextField(column_name="comment", null=True)
