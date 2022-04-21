@@ -13,15 +13,14 @@ admin_api = Blueprint("admin_api", __name__)
 def admin_required(func):
     @wraps(func)
     def decorated_function(*args, **kwargs):
-        # token_data = get_jwt_identity()
-        # try:
-        #     admin_token_check = token_data["status"]
-        # except Exception:
-        #     return "rights error", 406
-        # if admin_token_check != 9:
-        #     return "rights error", 406
+        token_data = get_jwt_identity()
+        try:
+            admin_token_check = token_data["status"]
+        except Exception:
+            return "rights error", 406
+        if admin_token_check != 9:
+            return "rights error", 406
         return func(*args, **kwargs)
-
     return decorated_function
 
 

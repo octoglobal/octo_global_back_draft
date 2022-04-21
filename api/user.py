@@ -130,11 +130,44 @@ def orders_info():
             return "user not found", 403
         user_orders = Order.select(Order.id, Order.longId, Order.userId, Order.title, Order.comment, Order.trackNumber,
                                    Order.statusId, Order.createdTime) \
-            .where(Order.userId == user_id)\
+            .where(Order.userId == user_id, ((Order.statusId == 0) | (Order.statusId == 1)))\
             .order_by(Order.id.desc()).dicts()
         for order in list(user_orders):
             order["tracking_link"] = "https://gdeposylka.ru/" + str(order["trackNumber"])
-        return jsonify({"orders": list(user_orders)}), 200
+        user_packages = list(Package
+                             .select(Package.id, Package.longId, Package.addressId,
+                                     Package.statusId, Package.trackNumber)
+                             .where(Order.userId == user_id)
+                             .join(Order, on=(Package.id == Order.packageId))
+                             .group_by(Package).dicts())
+        user_packages_orders = list(Order.select(Order.id, Order.longId, Order.userId, Order.title, Order.comment,
+                                                 Order.trackNumber, Order.statusId, Order.createdTime, Order.packageId)
+                                    .where(Order.userId == user_id).join(Package, on=(Order.packageId == Package.id))
+                                    .dicts())
+        user_packages_addresses_ids = [temp["addressId"] for temp in user_packages]
+        user_packages_addresses_ids.remove(None)
+        user_packages_addresses = list(Users_addresses
+                                       .select(Users_addresses.id, Users_addresses.address_string,
+                                               Users_addresses.phone, Users_addresses.name, Users_addresses.surname,
+                                               Users_addresses.longitude, Users_addresses.latitude)
+                                       .where(Users_addresses.userId == user_id, Users_addresses.delete != True,
+                                              Users_addresses.id << user_packages_addresses_ids).dicts())
+        for user_package in user_packages:
+            if user_package["addressId"]:
+                package_address = next(i for i in user_packages_addresses if i["id"] == user_package["addressId"])
+                user_package["addresses"] = package_address
+            else:
+                user_package["addresses"] = None
+            if user_package["trackNumber"]:
+                user_package["tracking_link"] = "https://gdeposylka.ru/" + str(user_package["trackNumber"])
+            else:
+                user_package["tracking_link"] = None
+            user_packages_orders_list = []
+            for user_packages_order in user_packages_orders:
+                if user_packages_order["packageId"] == user_package["id"]:
+                    user_packages_orders_list.append(user_packages_order)
+            user_package["orders"] = user_packages_orders_list
+        return jsonify({"orders": list(user_orders), "packages": user_packages}), 200
 
     if request.method == "POST":
         request_data = request.get_json()
@@ -425,7 +458,6 @@ def user_packages_address_actions():
         package.statusId = 2
         package.save()
         return jsonify({"message": "success"}), 200
-
 
     # if request.method == "DELETE":
     #     request_data = request.get_json()
