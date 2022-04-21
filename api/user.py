@@ -145,7 +145,8 @@ def orders_info():
                                     .where(Order.userId == user_id).join(Package, on=(Order.packageId == Package.id))
                                     .dicts())
         user_packages_addresses_ids = [temp["addressId"] for temp in user_packages]
-        user_packages_addresses_ids.remove(None)
+        if None in user_packages_addresses_ids:
+            user_packages_addresses_ids.remove(None)
         user_packages_addresses = list(Users_addresses
                                        .select(Users_addresses.id, Users_addresses.address_string,
                                                Users_addresses.phone, Users_addresses.name, Users_addresses.surname,
