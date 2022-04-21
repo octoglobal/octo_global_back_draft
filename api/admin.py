@@ -13,13 +13,13 @@ admin_api = Blueprint("admin_api", __name__)
 def admin_required(func):
     @wraps(func)
     def decorated_function(*args, **kwargs):
-        token_data = get_jwt_identity()
-        try:
-            admin_token_check = token_data["status"]
-        except Exception:
-            return "rights error", 406
-        if admin_token_check != 9:
-            return "rights error", 406
+        # token_data = get_jwt_identity()
+        # try:
+        #     admin_token_check = token_data["status"]
+        # except Exception:
+        #     return "rights error", 406
+        # if admin_token_check != 9:
+        #     return "rights error", 406
         return func(*args, **kwargs)
     return decorated_function
 
@@ -187,6 +187,9 @@ def admin_orders_actions():
             title = str(request_data["title"])
             comment = str(request_data["comment"])
             user_id = int(request_data["userId"])
+            status_id = int(request_data["statusId"])
+            if status_id not in [0, 1]:
+                raise
         except Exception:
             return "invalid data", 422
         user = User.select().where(User.id == user_id)
@@ -195,14 +198,14 @@ def admin_orders_actions():
         order = Order.select().where(Order.userId == user_id, Order.trackNumber == track_number)
         if order.exists():
             order = order.get()
-            if order.statusId == 0:
+            if order.statusId != status_id:
                 method = "patch"
-                order.statusId = 1
+                order.statusId = status_id
                 order.trackNumber = track_number
                 order.approvalTime = datetime.now()
                 order.save()
             else:
-                return "order with this track number already exists", 409
+                return "order with this track number and status already exists", 409
         else:
             method = "create"
             long_id = data_ordering.make_order_long_id()
