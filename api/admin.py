@@ -231,7 +231,8 @@ def admin_orders_actions():
         user = User.select().where(User.id == user_id)
         if not user.exists():
             return "user not found", 403
-        order = Order.select().where(Order.id == order_id, Order.userId == user_id)
+        order = Order.select().where(Order.id == order_id, Order.userId == user_id,
+                                     ((Order.statusId == 0) | (Order.statusId == 1)))
         if not order.exists():
             return "order not found or has an invalid status", 403
         order.get().delete_instance()
@@ -319,6 +320,55 @@ def admin_packages_actions():
         return jsonify({"message": "success"}), 200
 
 
+@admin_api.route("/admin/package/address", methods=["POST", "DELETE"])
+@jwt_required()
+@admin_required
+def admin_packages_address_actions():
+    if request.method == "POST":
+        request_data = request.get_json()
+        try:
+            user_id = int(request_data["userId"])
+            package_id = request_data["packageId"]
+            address_id = request_data["addressId"]
+        except Exception:
+            return "invalid data", 422
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        user_address = Users_addresses.select()\
+            .where(Users_addresses.userId == user_id, Users_addresses.id == address_id)
+        if not user_address.exists():
+            return "address not found", 403
+        package = Package.select().where(Package.id == package_id, Package.userId == user_id,
+                                         ((Package.statusId == 0) | (Package.statusId == 1)))
+        if not package.exists():
+            return "package not found", 403
+        package = package.get()
+        package.addressId = address_id
+        package.statusId = 2
+        package.save()
+        return jsonify({"message": "success"}), 200
+
+    if request.method == "DELETE":
+        request_data = request.get_json()
+        try:
+            user_id = int(request_data["userId"])
+            package_id = request_data["packageId"]
+        except Exception:
+            return "invalid data", 422
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        package = Package.select().where(Package.id == package_id, Package.userId == user_id, Package.statusId == 2)
+        if not package.exists():
+            return "package not found", 403
+        package = package.get()
+        package.statusId = 1
+        package.addressId = None
+        package.save()
+        return jsonify({"message": "success"}), 200
+
+
 @admin_api.route("/admin/package_track", methods=["POST", "DELETE"])
 @jwt_required()
 @admin_required
@@ -393,7 +443,7 @@ def admin_user_block_actions():
         return jsonify({"message": "success"}), 200
 
 
-@admin_api.route("/admin/user/<user_id>", methods=["GET"])
+@admin_api.route("/admin/user/<user_id>", methods=["GET", "PATCH"])
 @jwt_required()
 @admin_required
 def admin_user_actions(user_id):
@@ -416,6 +466,33 @@ def admin_user_actions(user_id):
         enough_user_data = data_ordering.get_user_enough_data(user)
         return jsonify({"user": enough_user_data}), 200
 
+    if request.method == "PATCH":
+        request_data = request.get_json()
+        try:
+            user_id = int(user_id)
+        except Exception:
+            return "invalid data", 422
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        user = user.get()
+        try:
+            new_email = request_data["newEmail"]
+            if User.get_or_none(email=new_email) is not None:
+                return "user with this email already exists", 409
+            user.email = new_email
+        except Exception:
+            pass
+        try:
+            new_phone = request_data["newPhone"]
+            if User.get_or_none(phone=new_phone) is not None:
+                return "user with this phone already exists", 409
+            user.phone = new_phone
+        except Exception:
+            pass
+        user.save()
+        return jsonify({"message": "success"}), 200
+
 
 @admin_api.route("/admin/search", methods=["GET"])
 @jwt_required()
@@ -428,20 +505,92 @@ def admin_search_actions():
             search_string = str(args["text"][0])
         except Exception:
             return "invalid data", 422
-        user_long_id_search = list(User.select(User.personalAreaId, User.id, User.name, User.surname, User.statusId)
+        user_long_id_search = list(User.select(User.personalAreaId, User.id, User.name,
+                                               User.surname, User.statusId, User.email)
                                    .where(User.personalAreaId.cast("TEXT").contains(search_string))
                                    .limit(search_results_limit).order_by(User.personalAreaId).dicts())
+        user_email_search = list(User.select(User.personalAreaId, User.id, User.name,
+                                             User.surname, User.statusId, User.email)
+                                 .where(User.email.contains(search_string))
+                                 .limit(search_results_limit).order_by(User.email).dicts())
         order_long_id_search = list(Order.select(Order.longId, Order.id, Order.title, Order.comment,
-                                                 Order.trackNumber, Order.statusId)
+                                                 Order.trackNumber, Order.statusId, Order.userId,
+                                                 User.id.alias("userId"), User.email.alias("userEmail"),
+                                                 User.name.alias("userName"), User.personalAreaId.alias("userAreaId"),
+                                                 User.statusId.alias("userStatusId"), User.surname.alias("userSurname"))
                                     .where(Order.longId.cast("TEXT").contains(search_string))
+                                    .join(User, on=(Order.userId == User.id))
                                     .limit(search_results_limit).order_by(Order.longId).dicts())
         order_track_number_search = list(Order.select(Order.longId, Order.id, Order.title, Order.comment,
-                                                      Order.trackNumber, Order.statusId)
+                                                      Order.trackNumber, Order.statusId, Order.userId,
+                                                      User.id.alias("userId"), User.email.alias("userEmail"),
+                                                      User.name.alias("userName"),
+                                                      User.personalAreaId.alias("userAreaId"),
+                                                      User.statusId.alias("userStatusId"),
+                                                      User.surname.alias("userSurname"))
                                          .where(Order.trackNumber.contains(search_string))
+                                         .join(User, on=(Order.userId == User.id))
                                          .limit(search_results_limit).order_by(Order.trackNumber).dicts())
         search_results = {
-            "users": user_long_id_search,
+            "users_numbers": user_long_id_search,
+            "users_emails": user_email_search,
             "orders_numbers": order_long_id_search,
             "orders_track_numbers": order_track_number_search
         }
         return jsonify({"search_results": search_results}), 200
+
+
+@admin_api.route("/admin/user/address", methods=["POST", "DELETE"])
+@jwt_required()
+@admin_required
+def admin_address_info():
+
+    if request.method == "POST":
+        request_data = request.get_json()
+        try:
+            user_id = int(request_data["userId"])
+            name = str(request_data["name"])
+            surname = str(request_data["surname"])
+            address_string = str(request_data["address_string"])
+            latitude = str(request_data["latitude"])
+            longitude = str(request_data["longitude"])
+            phone = str(request_data["phone"])
+        except Exception:
+            return "invalid data", 422
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        Users_addresses.create(
+            userId=user_id,
+            name=name,
+            surname=surname,
+            address_string=address_string,
+            latitude=latitude,
+            longitude=longitude,
+            phone=phone,
+            delete=False,
+            createdTime=datetime.now()
+        )
+        return jsonify({"message": "success"}), 200
+
+    if request.method == "DELETE":
+        request_data = request.get_json()
+        try:
+            user_id = int(request_data["userId"])
+            address_id = str(request_data["address_id"])
+        except Exception:
+            return "invalid data", 422
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        address = Users_addresses.select() \
+            .where(Users_addresses.id == address_id,
+                   Users_addresses.userId == user_id,
+                   Users_addresses.address_string != True)
+        if not address.exists():
+            return "address not found", 403
+        address = address.get()
+        address.deletedTime = datetime.now()
+        address.delete = True
+        address.save()
+        return jsonify({"message": "success"}), 200
