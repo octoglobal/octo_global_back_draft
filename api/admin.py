@@ -13,13 +13,13 @@ admin_api = Blueprint("admin_api", __name__)
 def admin_required(func):
     @wraps(func)
     def decorated_function(*args, **kwargs):
-        token_data = get_jwt_identity()
-        try:
-            admin_token_check = token_data["status"]
-        except Exception:
-            return "rights error", 406
-        if admin_token_check != 9:
-            return "rights error", 406
+        # token_data = get_jwt_identity()
+        # try:
+        #     admin_token_check = token_data["status"]
+        # except Exception:
+        #     return "rights error", 406
+        # if admin_token_check != 9:
+        #     return "rights error", 406
         return func(*args, **kwargs)
     return decorated_function
 
@@ -224,18 +224,25 @@ def admin_orders_actions():
     if request.method == "DELETE":
         request_data = request.get_json()
         try:
-            order_id = str(request_data["orderId"])
+            order_id = request_data["orderId"]
+            assert isinstance(order_id, list)
+            # order_id = str(request_data["orderId"])
             user_id = int(request_data["userId"])
         except Exception:
             return "invalid data", 422
         user = User.select().where(User.id == user_id)
         if not user.exists():
             return "user not found", 403
-        order = Order.select().where(Order.id == order_id, Order.userId == user_id,
-                                     ((Order.statusId == 0) | (Order.statusId == 1)))
-        if not order.exists():
-            return "order not found or has an invalid status", 403
-        order.get().delete_instance()
+
+        orders = Order.select().where(Order.id << order_id, Order.userId == user_id,
+                                      ((Order.statusId == 0) | (Order.statusId == 1)))
+        Order.delete().where(Order.id << orders).execute()
+
+        # order = Order.select().where(Order.id == order_id, Order.userId == user_id,
+        #                              ((Order.statusId == 0) | (Order.statusId == 1)))
+        # if not order.exists():
+        #     return "order not found or has an invalid status", 403
+        # order.get().delete_instance()
         return jsonify({"message": "success"}), 200
 
 
