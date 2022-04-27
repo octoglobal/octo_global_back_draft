@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 from collections import OrderedDict
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import formataddr
 # import mimetypes
 # from email import encoders
 # from email.mime.base import MIMEBase
@@ -19,7 +20,8 @@ def send_email(recipient, subject, message_text):
         email_smtp_login = config.smtp_login
         email_smtp_password = config.smtp_password
         message = MIMEMultipart()
-        message["From"] = config.smtp_from
+        message["From"] = formataddr(("Octo Global", config.smtp_from))
+        # message["From"] = config.smtp_from
         message["To"] = str(recipient)
         message["Subject"] = str(subject)
         html = message_text
