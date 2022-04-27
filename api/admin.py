@@ -790,7 +790,6 @@ def admin_orders_sent_info():
             page = int(args["page"][0])
             if page <= 0:
                 page = 1
-                page = 1
         except Exception:
             page = 1
         try:
