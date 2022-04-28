@@ -6,7 +6,8 @@ from datetime import datetime
 import math
 import itertools
 from database import User, Users_addresses, Order, Shop, Tag, Tag_of_shops, Review, Post, Post_product, Package
-from functions import data_ordering
+from functions import data_ordering, email_sending
+import config
 
 user_api = Blueprint("user_api", __name__)
 
@@ -673,7 +674,13 @@ def user_packages_address_actions():
         package.addressId = address_id
         package.statusId = 2
         package.save()
-        return jsonify({"message": "success"}), 200
+        user_dict = model_to_dict(user.get())
+        package_dict = model_to_dict(package)
+        address_dict = model_to_dict(user_address.get())
+        if not email_sending.send_registration_of_the_parcel(config.admin_email, "Octo Global: Оповещение", user_dict,
+                                                             package_dict, address_dict):
+            return jsonify({"message": "success", "sendEmail": False}), 201
+        return jsonify({"message": "success", "sendEmail": True}), 200
 
     # if request.method == "DELETE":
     #     request_data = request.get_json()
@@ -696,3 +703,32 @@ def user_packages_address_actions():
     #     Order.update(statusId=1, packageId=None).where(Order.id << user_orders).execute()
     #     package.get().delete_instance()
     #     return jsonify({"message": "success"}), 200
+
+
+@user_api.route("/user/send_message/<order_action>/<order_id>", methods=["GET"])
+@jwt_required()
+def send_email_messages(order_action, order_id):
+
+    if request.method == "GET":
+        if order_action not in ["order_return", "order_check"]:
+            return "invalid data", 422
+        token_data = get_jwt_identity()
+        user_id = token_data["user_id"]
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        order = Order.select().where(Order.id == order_id, Order.userId == user_id)
+        if not order.exists():
+            return "order not found or has an invalid status", 403
+        user_dict = model_to_dict(user.get())
+        order_dict = model_to_dict(order.get())
+        if order_action == "order_return":
+            if not email_sending.send_order_return(config.admin_email, "Octo Global: Оповещение",
+                                                   user_dict, order_dict):
+                return "email send error", 500
+
+        if order_action == "order_check":
+            if not email_sending.send_order_check(config.admin_email, "Octo Global: Оповещение",
+                                                  user_dict, order_dict):
+                return "email send error", 500
+        return jsonify({"message": "success"}), 200
