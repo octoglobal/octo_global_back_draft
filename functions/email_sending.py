@@ -20,7 +20,7 @@ def send_email(recipient, subject, message_text):
         email_smtp_login = config.smtp_login
         email_smtp_password = config.smtp_password
         message = MIMEMultipart()
-        message["From"] = formataddr(("Octo Global", config.smtp_from))
+        message["From"] = formataddr(("OctoGlobal", config.smtp_from))
         # message["From"] = config.smtp_from
         message["To"] = str(recipient)
         message["Subject"] = str(subject)
@@ -116,4 +116,110 @@ def send_recovery_message(recipient, subject, time, token, name, surname):
                 </body>
             </html>
             """.format(name=name, surname=surname, email=recipient, url=url)
+    return send_email(recipient, subject, html)
+
+
+def send_order_return(recipient, subject, user, order):
+    html = """
+            <html>
+                <body>
+                    <p>
+                        Заявка на возврат товара.
+                        <br>
+                        <br>
+                        Пользователь:
+                        <br>
+                        <br>
+                        ФИ: {user_surname} {user_name}
+                        <br>
+                        ID: {user_long_id}
+                        <br>
+                        Email: {user_email}
+                        <br>
+                        <br>
+                        Заказ:
+                        <br>
+                        <br>
+                        Track: {order_track}
+                        <br>
+                        ID: {order_long_id}
+                    </p>
+                </body>
+            </html>
+            """.format(user_surname=user["name"], user_name=user["surname"], user_long_id=user["personalAreaId"],
+                       user_email=user["email"], order_track=order["trackNumber"], order_long_id=order["longId"])
+    return send_email(recipient, subject, html)
+
+
+def send_order_check(recipient, subject, user, order):
+    html = """
+            <html>
+                <body>
+                    <p>
+                        Заявка на проверку товара.
+                        <br>
+                        <br>
+                        Пользователь:
+                        <br>
+                        <br>
+                        ФИ: {user_surname} {user_name}
+                        <br>
+                        ID: {user_long_id}
+                        <br>
+                        Email: {user_email}
+                        <br>
+                        <br>
+                        Заказ:
+                        <br>
+                        <br>
+                        Track: {order_track}
+                        <br>
+                        ID: {order_long_id}
+                    </p>
+                </body>
+            </html>
+            """.format(user_surname=user["name"], user_name=user["surname"], user_long_id=user["personalAreaId"],
+                       user_email=user["email"], order_track=order["trackNumber"], order_long_id=order["longId"])
+    return send_email(recipient, subject, html)
+
+
+def send_registration_of_the_parcel(recipient, subject, user, package, address):
+    html = """
+            <html>
+                <body>
+                    <p>
+                        Заявка на отправку посылки.
+                        <br>
+                        <br>
+                        Пользователь:
+                        <br>
+                        <br>
+                        ФИ: {user_surname} {user_name}
+                        <br>
+                        ID: {user_long_id}
+                        <br>
+                        Email: {user_email}
+                        <br>
+                        <br>
+                        Посылка:
+                        <br>
+                        <br>
+                        ID: {package_long_id}
+                        <br>
+                        <br>
+                        Данные для отправки:
+                        <br>
+                        <br>
+                        Адрес: {address_string}
+                        <br>
+                        ФИ: {address_surname} {address_name}
+                        <br>
+                        телефон: {address_phone}
+                    </p>
+                </body>
+            </html>
+            """.format(user_surname=user["name"], user_name=user["surname"], user_long_id=user["personalAreaId"],
+                       user_email=user["email"], package_long_id=package["longId"],
+                       address_string=address["address_string"], address_name=address["name"],
+                       address_surname=address["surname"], address_phone=address["phone"])
     return send_email(recipient, subject, html)
