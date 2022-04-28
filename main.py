@@ -22,6 +22,7 @@ app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=config.jwt_refresh_toke
 app.config["JWT_TOKEN_LOCATION"] = [config.jwt_token_location]
 app.config["JWT_COOKIE_SECURE"] = config.jwt_cookie_secure
 app.config["JWT_COOKIE_CSRF_PROTECT"] = config.jwt_cookie_csrf_protect
+app.config["JWT_CSRF_CHECK_FORM"] = config.jwt_csrf_check_form
 app.config["JWT_SESSION_COOKIE"] = config.jwt_session_cookie
 global_salt = config.global_salt
 
