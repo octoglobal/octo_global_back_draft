@@ -4,13 +4,20 @@ from datetime import datetime
 
 now = datetime.now()
 # tables = [User, Order, Post, Shop, Error, Email_message, Users_addresses, Package, Tag_of_shops, Tag]
-tables = [Post, Post_product, Review]
+tables = []
 
 db.drop_tables(tables)
 db.create_tables(tables)
 
 
 admin = User.select().where(User.email == "octoglobal@2083492octoglobal")
+if admin.exists():
+    admin = admin.get()
+    admin.verifiedEmail = True
+    admin.statusId = 9
+    admin.save()
+
+admin = User.select().where(User.email == "octoglobal@octoglobal.ru")
 if admin.exists():
     admin = admin.get()
     admin.verifiedEmail = True

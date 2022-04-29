@@ -322,7 +322,8 @@ def admin_packages_actions():
         query = Order.update(statusId=2, packageId=package_id) \
             .where(Order.userId == user_id, Order.statusId == 1, Order.id << request_orders)
         query.execute()
-        return jsonify({"message": "success"}), 200
+        package_dict = model_to_dict(package)
+        return jsonify({"message": "success", "package": package_dict}), 200
 
     # if request.method == "PATCH":
     #     request_data = request.get_json()
