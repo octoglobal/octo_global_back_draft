@@ -568,6 +568,11 @@ def admin_search_actions():
                                              User.surname, User.statusId, User.email)
                                  .where(User.email.contains(search_string))
                                  .limit(search_results_limit).order_by(User.email).dicts())
+
+        user_initials_search = list(User.select(User.personalAreaId, User.id, User.name, User.surname,
+                                                User.statusId, User.email)
+                                    .where((User.name.contains(search_string)) | (User.surname.contains(search_string)))
+                                    .limit(search_results_limit).order_by(User.surname).dicts())
         order_long_id_search = list(Order.select(Order.longId, Order.id, Order.title, Order.comment,
                                                  Order.trackNumber, Order.statusId, Order.userId,
                                                  User.id.alias("userId"), User.email.alias("userEmail"),
@@ -795,6 +800,7 @@ def admin_orders_sent_info():
             if page <= 0:
                 page = 1
         except Exception:
+            page = 1
             page = 1
         try:
             page_limit = int(args["page_limit"][0])
