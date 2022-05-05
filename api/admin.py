@@ -595,7 +595,8 @@ def admin_search_actions():
             "users_numbers": user_long_id_search,
             "users_emails": user_email_search,
             "orders_numbers": order_long_id_search,
-            "orders_track_numbers": order_track_number_search
+            "orders_track_numbers": order_track_number_search,
+            "user_initials_search": user_initials_search
         }
         return jsonify({"search_results": search_results}), 200
 
