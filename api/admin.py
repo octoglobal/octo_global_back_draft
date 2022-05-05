@@ -366,7 +366,8 @@ def admin_packages_actions():
                    Order.packageId == package_id,
                    Package.id == package_id,
                    Package.userId == user_id,
-                   ((Package.statusId == 0) | (Package.statusId == 1) | (Package.statusId == 2))) \
+                   ((Package.statusId == 0) | (Package.statusId == 1) |
+                    (Package.statusId == 2) | (Package.statusId == 4))) \
             .join(Package, on=(Order.packageId == Package.id))
         Order.update(statusId=1, packageId=None).where(Order.id << user_orders).execute()
         package.get().delete_instance()
@@ -393,7 +394,7 @@ def admin_packages_address_actions():
         if not user_address.exists():
             return "address not found", 403
         package = Package.select().where(Package.id == package_id, Package.userId == user_id,
-                                         ((Package.statusId == 0) | (Package.statusId == 1)))
+                                         ((Package.statusId == 0) | (Package.statusId == 1) | (Package.statusId == 4)))
         if not package.exists():
             return "package not found", 403
         package = package.get()
@@ -416,7 +417,7 @@ def admin_packages_address_actions():
         if not package.exists():
             return "package not found", 403
         package = package.get()
-        package.statusId = 1
+        package.statusId = 4
         package.addressId = None
         package.save()
         return jsonify({"message": "success"}), 200
