@@ -357,7 +357,8 @@ def admin_packages_actions():
         package = Package.select() \
             .where(Package.id == package_id,
                    Package.userId == user_id,
-                   ((Package.statusId == 0) | (Package.statusId == 1)))
+                   ((Package.statusId == 0) | (Package.statusId == 1) |
+                    (Package.statusId == 2) | (Package.statusId == 4)))
         if not package.exists():
             return "package not found", 403
         user_orders = Order.select() \
