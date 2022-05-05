@@ -723,7 +723,8 @@ def admin_orders_are_waiting_info():
                                                  Package.statusId, Package.trackNumber)
                                          .where(Order.userId == user_id, ((Package.statusId == 0) |
                                                                           (Package.statusId == 1) |
-                                                                          (Package.statusId == 2)))
+                                                                          (Package.statusId == 2) |
+                                                                          (Package.statusId == 4)))
                                          .join(Order, on=(Package.id == Order.packageId))
                                          .order_by(Package.id.desc()).offset(offset).limit(page_limit)
                                          .group_by(Package).dicts())
