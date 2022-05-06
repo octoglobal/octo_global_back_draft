@@ -321,8 +321,8 @@ def orders_are_waiting_info():
                                 user_packages_orders_list.append(user_packages_order)
                         user_package["orders"] = user_packages_orders_list
                     return jsonify({"packages": user_packages}), 200
-                except Exception:
-                    return "packages loading error", 500
+                except Exception as e:
+                    return {"message": "packages loading error", "error": e}, 500
         except Exception:
             pass
         user_orders = Order.select(Order.id, Order.longId, Order.userId, Order.title, Order.comment, Order.trackNumber,
