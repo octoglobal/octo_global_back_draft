@@ -652,7 +652,7 @@ def admin_address_info():
         user = User.select().where(User.id == user_id)
         if not user.exists():
             return "user not found", 403
-        Users_addresses.create(
+        new_address = Users_addresses.create(
             userId=user_id,
             name=name,
             surname=surname,
@@ -663,7 +663,7 @@ def admin_address_info():
             delete=False,
             createdTime=datetime.now()
         )
-        return jsonify({"message": "success"}), 200
+        return jsonify({"message": "success", "addressId": new_address.id}), 200
 
     if request.method == "DELETE":
         request_data = request.get_json()
