@@ -259,7 +259,7 @@ def admin_orders_actions():
                 longId=long_id,
                 title=title,
                 comment=comment,
-                statusId=1,
+                statusId=status_id,
                 trackNumber=track_number,
                 createdTime=datetime.now(),
                 approvalTime=datetime.now()
