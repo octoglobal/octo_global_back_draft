@@ -378,7 +378,7 @@ def admin_packages_actions():
 @admin_api.route("/admin/package_with_orders", methods=["DELETE"])
 @jwt_required()
 @admin_required
-def admin_packages_actions():
+def admin_package_with_orders_actions():
 
     if request.method == "DELETE":
         request_data = request.get_json()
