@@ -271,7 +271,6 @@ def admin_orders_actions():
         try:
             order_id = request_data["orderId"]
             assert isinstance(order_id, list)
-            # order_id = str(request_data["orderId"])
             user_id = int(request_data["userId"])
         except Exception:
             return "invalid data", 422
@@ -279,10 +278,11 @@ def admin_orders_actions():
         if not user.exists():
             return "user not found", 403
 
+        # orders = Order.select().where(Order.id << order_id, Order.userId == user_id,
+        #                               ((Order.statusId == 0) | (Order.statusId == 1)))
         orders = Order.select().where(Order.id << order_id, Order.userId == user_id,
                                       ((Order.statusId == 0) | (Order.statusId == 1)))
         Order.delete().where(Order.id << orders).execute()
-
         # order = Order.select().where(Order.id == order_id, Order.userId == user_id,
         #                              ((Order.statusId == 0) | (Order.statusId == 1)))
         # if not order.exists():
@@ -371,6 +371,37 @@ def admin_packages_actions():
                     (Package.statusId == 2) | (Package.statusId == 4))) \
             .join(Package, on=(Order.packageId == Package.id))
         Order.update(statusId=1, packageId=None).where(Order.id << user_orders).execute()
+        package.get().delete_instance()
+        return jsonify({"message": "success"}), 200
+
+
+@admin_api.route("/admin/package_with_orders", methods=["DELETE"])
+@jwt_required()
+@admin_required
+def admin_packages_actions():
+
+    if request.method == "DELETE":
+        request_data = request.get_json()
+        try:
+            user_id = int(request_data["userId"])
+            package_id = request_data["packageId"]
+        except Exception:
+            return "invalid data", 422
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        package = Package.select() \
+            .where(Package.id == package_id, Package.userId == user_id)
+        if not package.exists():
+            return "package not found", 403
+        user_orders = Order.select() \
+            .where(Order.userId == user_id,
+                   Order.statusId == 2,
+                   Order.packageId == package_id,
+                   Package.id == package_id,
+                   Package.userId == user_id) \
+            .join(Package, on=(Order.packageId == Package.id))
+        Order.delete().where(Order.id << user_orders).execute()
         package.get().delete_instance()
         return jsonify({"message": "success"}), 200
 
@@ -801,7 +832,6 @@ def admin_orders_sent_info():
             if page <= 0:
                 page = 1
         except Exception:
-            page = 1
             page = 1
         try:
             page_limit = int(args["page_limit"][0])
