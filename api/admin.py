@@ -781,7 +781,6 @@ def admin_orders_are_waiting_info():
                                                            Users_addresses.surname, Users_addresses.longitude,
                                                            Users_addresses.latitude)
                                                    .where(Users_addresses.userId == user_id,
-                                                          Users_addresses.delete != True,
                                                           Users_addresses.id << user_packages_addresses_ids).dicts())
                     for user_package in user_packages:
                         if user_package["addressId"]:
@@ -863,7 +862,6 @@ def admin_orders_sent_info():
                                                    Users_addresses.surname, Users_addresses.longitude,
                                                    Users_addresses.latitude)
                                            .where(Users_addresses.userId == user_id,
-                                                  Users_addresses.delete != True,
                                                   Users_addresses.id << user_packages_addresses_ids).dicts())
             for user_package in user_packages:
                 if user_package["addressId"]:
