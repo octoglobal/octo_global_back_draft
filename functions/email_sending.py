@@ -11,11 +11,18 @@ from email.utils import formataddr
 # from email.mime.image import MIMEImage
 # from email.mime.audio import MIMEAudio
 import config
-from database import Email_message
+from database import Email_message, Notification
 from functions.loger import error_log
 
 
-def send_email(recipient, subject, message_text):
+def send_email(recipient_id, recipient, subject, message_text):
+    Notification.create(
+        recipient_id=int(recipient_id),
+        recipient_email=str(recipient),
+        subject=str(subject),
+        body=str(message_text),
+        date=datetime.now()
+    )
     try:
         email_smtp_login = config.smtp_login
         email_smtp_password = config.smtp_password
@@ -44,7 +51,7 @@ def send_email(recipient, subject, message_text):
         return False
 
 
-def send_welcome_message(recipient, subject, email_token, name, surname):
+def send_welcome_message(recipient_id, recipient, subject, email_token, name, surname):
     query_string = str(urlencode(OrderedDict(email=recipient, token=email_token)))
     url = str(config.front_domain + "/confirm?" + query_string)
     html = """
@@ -71,10 +78,10 @@ def send_welcome_message(recipient, subject, email_token, name, surname):
         </body>
     </html>
     """.format(name=name, surname=surname, email=recipient, url=url)
-    return send_email(recipient, subject, html)
+    return send_email(recipient_id, recipient, subject, html)
 
 
-def send_verification_message(recipient, subject, email_token, name, surname):
+def send_verification_message(recipient_id, recipient, subject, email_token, name, surname):
     query_string = str(urlencode(OrderedDict(email=recipient, token=email_token)))
     url = str(config.front_domain + "/confirm?" + query_string)
     html = """
@@ -92,10 +99,10 @@ def send_verification_message(recipient, subject, email_token, name, surname):
                 </body>
             </html>
             """.format(name=name, surname=surname, email=recipient, url=url)
-    return send_email(recipient, subject, html)
+    return send_email(recipient_id, recipient, subject, html)
 
 
-def send_recovery_message(recipient, subject, time, token, name, surname):
+def send_recovery_message(recipient_id, recipient, subject, time, token, name, surname):
     query_string = str(urlencode(OrderedDict(token=token, expaire=str(time))))
     url = str(config.front_domain + "/reset_password?" + query_string)
     html = """
@@ -116,10 +123,10 @@ def send_recovery_message(recipient, subject, time, token, name, surname):
                 </body>
             </html>
             """.format(name=name, surname=surname, email=recipient, url=url)
-    return send_email(recipient, subject, html)
+    return send_email(recipient_id, recipient, subject, html)
 
 
-def send_order_return(recipient, subject, user, order):
+def send_order_return(recipient_id, recipient, subject, user, order):
     html = """
             <html>
                 <body>
@@ -148,10 +155,10 @@ def send_order_return(recipient, subject, user, order):
             </html>
             """.format(user_surname=user["name"], user_name=user["surname"], user_long_id=user["personalAreaId"],
                        user_email=user["email"], order_track=order["trackNumber"], order_long_id=order["longId"])
-    return send_email(recipient, subject, html)
+    return send_email(recipient_id, recipient, subject, html)
 
 
-def send_order_check(recipient, subject, user, order):
+def send_order_check(recipient_id, recipient, subject, user, order):
     html = """
             <html>
                 <body>
@@ -180,10 +187,10 @@ def send_order_check(recipient, subject, user, order):
             </html>
             """.format(user_surname=user["name"], user_name=user["surname"], user_long_id=user["personalAreaId"],
                        user_email=user["email"], order_track=order["trackNumber"], order_long_id=order["longId"])
-    return send_email(recipient, subject, html)
+    return send_email(recipient_id, recipient, subject, html)
 
 
-def send_registration_of_the_parcel(recipient, subject, user, package, address):
+def send_registration_of_the_parcel(recipient_id, recipient, subject, user, package, address):
     html = """
             <html>
                 <body>
@@ -222,4 +229,4 @@ def send_registration_of_the_parcel(recipient, subject, user, package, address):
                        user_email=user["email"], package_long_id=package["longId"],
                        address_string=address["address_string"], address_name=address["name"],
                        address_surname=address["surname"], address_phone=address["phone"])
-    return send_email(recipient, subject, html)
+    return send_email(recipient_id, recipient, subject, html)

@@ -178,6 +178,18 @@ class Email_message(BaseModel):
         table_name = "email_messages"
 
 
+class Notification(BaseModel):
+    id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
+    recipient_id = IntegerField(column_name="recipient_id", null=True)
+    recipient_email = TextField(column_name="recipient_email", null=True)
+    subject = TextField(column_name="subject", null=True)
+    body = TextField(column_name="body", null=True)
+    date = DateTimeField(column_name="date", null=True)
+
+    class Meta:
+        table_name = "notifications"
+
+
 class Error(BaseModel):
     id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
     error = TextField(column_name="error", null=True)

@@ -1,5 +1,5 @@
 from database import db, User, Order, Post, Shop, Error, Email_message, Users_addresses, Package, Tag_of_shops, \
-    Tag, Review, Post_product
+    Tag, Review, Post_product, Notification
 from datetime import datetime
 
 now = datetime.now()

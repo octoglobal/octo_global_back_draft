@@ -676,7 +676,7 @@ def user_packages_address_actions():
         user_dict = model_to_dict(user.get())
         package_dict = model_to_dict(package)
         address_dict = model_to_dict(user_address.get())
-        if not email_sending.send_registration_of_the_parcel(config.admin_delivery_info_email,
+        if not email_sending.send_registration_of_the_parcel(0, config.admin_delivery_info_email,
                                                              "Octo Global: Оповещение", user_dict,
                                                              package_dict, address_dict):
             return jsonify({"message": "success", "sendEmail": False}), 201
@@ -723,12 +723,12 @@ def send_email_messages(order_action, order_id):
         user_dict = model_to_dict(user.get())
         order_dict = model_to_dict(order.get())
         if order_action == "order_return":
-            if not email_sending.send_order_return(config.admin_delivery_info_email, "Octo Global: Оповещение",
+            if not email_sending.send_order_return(0, config.admin_delivery_info_email, "Octo Global: Оповещение",
                                                    user_dict, order_dict):
                 return "email send error", 500
 
         if order_action == "order_check":
-            if not email_sending.send_order_check(config.admin_delivery_info_email, "Octo Global: Оповещение",
+            if not email_sending.send_order_check(0, config.admin_delivery_info_email, "Octo Global: Оповещение",
                                                   user_dict, order_dict):
                 return "email send error", 500
         return jsonify({"message": "success"}), 200

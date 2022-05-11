@@ -49,7 +49,7 @@ def registration():
         email_token = uuid.uuid4().hex
         hashed_password = data_ordering.password_hash(password, privat_salt)
         try:
-            User.create(
+            new_user = User.create(
                 personalAreaId=personal_area_id,
                 email=email,
                 name=name,
@@ -63,7 +63,8 @@ def registration():
             )
         except Exception:
             return "internal server error", 500
-        if not email_sending.send_welcome_message(email, "Добро пожаловать в Octo Global!", email_token, name, surname):
+        if not email_sending.send_welcome_message(new_user.id, email, "Добро пожаловать в Octo Global!",
+                                                  email_token, name, surname):
             return jsonify({"message": "user successfully created", "sendEmail": False}), 201
         return jsonify({"message": "user successfully created", "sendEmail": True}), 201
 
@@ -130,7 +131,7 @@ def send_verification_message():
                                                           Email_message.date >= time).dicts())
         if len(recovery_list) >= 5:
             return "too many requests", 429
-        if not email_sending.send_verification_message(email, "Octo Global: Подтверждение E-mail",
+        if not email_sending.send_verification_message(user.id, email, "Octo Global: Подтверждение E-mail",
                                                        email_token, name, surname):
             return "internal server error", 500
         return jsonify({"message": "message sent successfully"}), 200
@@ -160,7 +161,7 @@ def send_recovery_message():
         time_limit = datetime.utcnow() + timedelta(minutes=30)
         identify = {"user_id": user_id, "status": 5}
         access_token = create_access_token(identity=identify)
-        if not email_sending.send_recovery_message(email, "Octo Global: Восстановление пароля",
+        if not email_sending.send_recovery_message(user_id, email, "Octo Global: Восстановление пароля",
                                                    time_limit, access_token, name, surname):
             return "internal server error", 500
         return jsonify({"message": "message sent successfully"}), 200
