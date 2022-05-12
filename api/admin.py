@@ -5,7 +5,7 @@ from playhouse.shortcuts import model_to_dict
 import json
 from datetime import datetime
 from database import Shop, Tag_of_shops, Tag, Review, Post, Post_product, User, Order, Package, Users_addresses
-from functions import images_func, data_ordering
+from functions import images_func, data_ordering, email_sending
 
 admin_api = Blueprint("admin_api", __name__)
 
@@ -240,10 +240,14 @@ def admin_orders_actions():
         user = User.select().where(User.id == user_id)
         if not user.exists():
             return "user not found", 403
+        user = user.get()
         order = Order.select().where(Order.userId == user_id, Order.trackNumber == track_number)
         if order.exists():
             order = order.get()
             if order.statusId != status_id:
+                if status_id == 1:
+                    email_sending.send_arrived_at_the_warehouse(user_id, user.email, "Octo Global: Оповещение",
+                                                                user.name, user.surnamem, order.longId)
                 method = "patch"
                 order.statusId = status_id
                 order.trackNumber = track_number
@@ -445,6 +449,7 @@ def admin_packages_address_actions():
         user = User.select().where(User.id == user_id)
         if not user.exists():
             return "user not found", 403
+        user = user.get()
         package = Package.select().where(Package.id == package_id, Package.userId == user_id, Package.statusId == 2)
         if not package.exists():
             return "package not found", 403
@@ -452,6 +457,8 @@ def admin_packages_address_actions():
         package.statusId = 4
         package.addressId = None
         package.save()
+        email_sending.send_cancelled_package(user_id, user.email, "Octo Global: Оповещение",
+                                             user.name, user.surnamem, package.longId)
         return jsonify({"message": "success"}), 200
 
 
@@ -470,6 +477,7 @@ def admin_package_track_actions():
         user = User.select().where(User.id == user_id)
         if not user.exists():
             return "user not found", 403
+        user = user.get()
         package = Package.select().where(Package.id == package_id, Package.userId == user_id, Package.statusId == 2)
         if not package.exists():
             return "package not found", 403
@@ -478,6 +486,9 @@ def admin_package_track_actions():
         package.trackNumber = track_number
         package.dispatchTime = datetime.now()
         package.save()
+        package_address = Users_addresses.select().where(Users_addresses.id == package.addressId).get()
+        email_sending.send_package_send(user_id, user.email, "Octo Global: Оповещение",
+                                        user.name, user.surnamem, package.longId, package_address.address_string)
         return jsonify({"message": "success"}), 200
 
     if request.method == "DELETE":

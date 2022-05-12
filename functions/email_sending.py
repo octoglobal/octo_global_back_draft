@@ -59,7 +59,7 @@ def send_welcome_message(recipient_id, recipient, subject, email_token, name, su
         <body>
             <p>
                 <b>
-                    Регистрация успешна    
+                    Регистрация успешно завершена.    
                 </b>
                 <br>
                 Здравствуйте, {name} {surname}!
@@ -91,7 +91,10 @@ def send_verification_message(recipient_id, recipient, subject, email_token, nam
                         Здравствуйте, {name} {surname}!
                         <br>
                         <br>
-                        <a href={url}>Подтвердите почтовый адрес</a>
+                        Подтвердите почтовый адрес
+                        <br>
+                        <br>
+                        <a href={url}>Подтвердить</a>
                         <br>
                         <br>
                         С уважением octo global.
@@ -110,6 +113,9 @@ def send_recovery_message(recipient_id, recipient, subject, time, token, name, s
                 <body>
                     <p>
                         Здравствуйте, {name} {surname}!
+                        <br>
+                        <br>
+                        Вы отправили запрос на восстановление пароля от почтового ящика.
                         <br>
                         <br>
                         Для изменения пароля нажмите на ссылку ниже:
@@ -229,4 +235,64 @@ def send_registration_of_the_parcel(recipient_id, recipient, subject, user, pack
                        user_email=user["email"], package_long_id=package["longId"],
                        address_string=address["address_string"], address_name=address["name"],
                        address_surname=address["surname"], address_phone=address["phone"])
+    return send_email(recipient_id, recipient, subject, html)
+
+
+def send_arrived_at_the_warehouse(recipient_id, recipient, subject, name, surname, order_number):
+    html = """
+            <html>
+                <body>
+                    <p>
+                        Здравствуйте, {name} {surname}!
+                        <br>
+                        <br>
+                        Сообщаем Вам о том, что Ваш заказ № {order_number} пришел на склад
+                        <br>
+                        <br>
+                        С уважением octo global.
+                    </p>
+                </body>
+            </html>
+            """.format(name=name, surname=surname, order_number=order_number)
+    return send_email(recipient_id, recipient, subject, html)
+
+
+def send_cancelled_package(recipient_id, recipient, subject, name, surname, package_number):
+    html = """
+            <html>
+                <body>
+                    <p>
+                        Здравствуйте, {name} {surname}!
+                        <br>
+                        <br>
+                        Консолидация Вашей посылки № {package_number} отменена администратором. 
+                        Для того, чтобы получить подробную информацию об отмене, свяжитесь с нами по почте
+                        help@octo.global
+                        <br>
+                        <br>
+                        С уважением octo global.
+                    </p>
+                </body>
+            </html>
+            """.format(name=name, surname=surname, package_number=package_number)
+    return send_email(recipient_id, recipient, subject, html)
+
+
+def send_package_send(recipient_id, recipient, subject, name, surname, package_number, package_address):
+    html = """
+            <html>
+                <body>
+                    <p>
+                        Здравствуйте, {name} {surname}!
+                        <br>
+                        <br>
+                        Ваша посылка № {package_number} заказа отправлена в Россию по адресу:
+                        {package_address} 
+                        <br>
+                        <br>
+                        С уважением octo global.
+                    </p>
+                </body>
+            </html>
+            """.format(name=name, surname=surname, package_number=package_number, package_address=package_address)
     return send_email(recipient_id, recipient, subject, html)
