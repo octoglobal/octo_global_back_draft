@@ -245,14 +245,14 @@ def admin_orders_actions():
         if order.exists():
             order = order.get()
             if order.statusId != status_id:
-                if status_id == 1:
-                    email_sending.send_arrived_at_the_warehouse(user_id, user.email, "Octo Global: Оповещение",
-                                                                user.name, user.surnamem, order.longId)
                 method = "patch"
                 order.statusId = status_id
                 order.trackNumber = track_number
                 order.approvalTime = datetime.now()
                 order.save()
+                if status_id == 1:
+                    email_sending.send_arrived_at_the_warehouse(user_id, user.email, "Octo Global: Оповещение",
+                                                                user.name, user.surname, order.longId)
             else:
                 return "order with this track number and status already exists", 409
         else:
@@ -268,6 +268,9 @@ def admin_orders_actions():
                 createdTime=datetime.now(),
                 approvalTime=datetime.now()
             )
+            if status_id == 1:
+                email_sending.send_arrived_at_the_warehouse(user_id, user.email, "Octo Global: Оповещение",
+                                                            user.name, user.surname, order.longId)
         return jsonify({"message": "success", "method": method}), 200
 
     if request.method == "DELETE":
@@ -458,7 +461,7 @@ def admin_packages_address_actions():
         package.addressId = None
         package.save()
         email_sending.send_cancelled_package(user_id, user.email, "Octo Global: Оповещение",
-                                             user.name, user.surnamem, package.longId)
+                                             user.name, user.surname, package.longId)
         return jsonify({"message": "success"}), 200
 
 
@@ -488,7 +491,7 @@ def admin_package_track_actions():
         package.save()
         package_address = Users_addresses.select().where(Users_addresses.id == package.addressId).get()
         email_sending.send_package_send(user_id, user.email, "Octo Global: Оповещение",
-                                        user.name, user.surnamem, package.longId, package_address.address_string)
+                                        user.name, user.surname, package.longId, package_address.address_string)
         return jsonify({"message": "success"}), 200
 
     if request.method == "DELETE":
