@@ -214,7 +214,13 @@ def password_change():
         user.password = new_hashed_password
         user.salt = new_privat_salt
         user.save()
-        return jsonify({"message": "password successfully changed"}), 200
+        identify = {"user_id": user_id, "status": user.statusId, "salt": new_privat_salt}
+        access_token = create_access_token(identity=identify)
+        refresh_token = create_refresh_token(identity=identify)
+        response = jsonify({"message": "password successfully changed"})
+        set_access_cookies(response, access_token)
+        set_refresh_cookies(response, refresh_token)
+        return response, 200
 
 
 @reg_and_auth.route("/password_recovery", methods=["POST"])
