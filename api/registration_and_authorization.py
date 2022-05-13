@@ -94,7 +94,8 @@ def login():
         hashed_password = data_ordering.password_hash(password, privat_salt)
         if db_hashed_password != hashed_password:
             return "wrong password", 403
-        identify = {"user_id": user_id, "status": user_status, "salt": privat_salt}
+        # identify = {"user_id": user_id, "status": user_status, "salt": privat_salt}
+        identify = {"user_id": user_id, "status": user_status}
         access_token = create_access_token(identity=identify)
         refresh_token = create_refresh_token(identity=identify)
         user = model_to_dict(user)

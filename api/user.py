@@ -27,13 +27,13 @@ def user_data():
         user_id = token_data["user_id"]
         user = User.select().where(User.id == user_id)
         if not user.exists():
-            response = "user not found"
+            response = jsonify({"message": "user not found"})
             unset_jwt_cookies(response)
             return response, 403
         try:
             user_salt = token_data["salt"]
         except Exception:
-            response = "cookie error"
+            response = jsonify({"message": "user not found"})
             unset_jwt_cookies(response)
             return response, 422
         user = user.get()
