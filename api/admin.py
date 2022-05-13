@@ -584,6 +584,7 @@ def admin_user_actions(user_id):
             changes["email"] = True
             if User.get_or_none(email=new_email) is not None:
                 changes["email"] = False
+                raise Exception
             user.email = new_email
         except Exception:
             pass
@@ -592,6 +593,7 @@ def admin_user_actions(user_id):
             changes["phone"] = True
             if User.get_or_none(phone=new_phone) is not None:
                 changes["phone"] = False
+                raise Exception
             user.phone = new_phone
         except Exception:
             pass
