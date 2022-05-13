@@ -33,12 +33,12 @@ def user_data():
         try:
             user_salt = token_data["salt"]
         except Exception:
-            response = jsonify({"message": "user not found"})
+            response = jsonify({"message": "salt_not_found"})
             unset_jwt_cookies(response)
             return response, 422
         user = user.get()
         if user_salt != user.salt:
-            response = jsonify({"message": "user not found"})
+            response = jsonify({"message": "salt_error"})
             unset_jwt_cookies(response)
             return response, 422
         user = model_to_dict(user)
