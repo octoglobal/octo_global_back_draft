@@ -38,7 +38,7 @@ def user_data():
             return response, 422
         user = user.get()
         if user_salt != user.salt:
-            response = "cookie error"
+            response = jsonify({"message": "user not found"})
             unset_jwt_cookies(response)
             return response, 422
         user = model_to_dict(user)
