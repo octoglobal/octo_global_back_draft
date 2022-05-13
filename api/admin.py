@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from functools import wraps
 from playhouse.shortcuts import model_to_dict
 import json
+import uuid
 from datetime import datetime
 from database import Shop, Tag_of_shops, Tag, Review, Post, Post_product, User, Order, Package, Users_addresses
 from functions import images_func, data_ordering, email_sending
@@ -598,6 +599,14 @@ def admin_user_actions(user_id):
         try:
             new_surname = request_data["surname"]
             user.surname = new_surname
+        except Exception:
+            pass
+        try:
+            new_password = request_data["password"]
+            privat_salt = uuid.uuid4().hex
+            hashed_password = data_ordering.password_hash(new_password, privat_salt)
+            user.password = hashed_password
+            user.salt = privat_salt
         except Exception:
             pass
         user.save()
