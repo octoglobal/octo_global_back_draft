@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, unset_jwt_cookies
 from playhouse.shortcuts import model_to_dict
 from peewee import fn
 from datetime import datetime
@@ -27,8 +27,20 @@ def user_data():
         user_id = token_data["user_id"]
         user = User.select().where(User.id == user_id)
         if not user.exists():
-            return "user not found", 403
+            response = "user not found"
+            unset_jwt_cookies(response)
+            return response, 403
+        try:
+            user_salt = token_data["salt"]
+        except Exception:
+            response = "cookie error"
+            unset_jwt_cookies(response)
+            return response, 422
         user = user.get()
+        if user_salt != user.salt:
+            response = "cookie error"
+            unset_jwt_cookies(response)
+            return response, 422
         user = model_to_dict(user)
         user_addresses = Users_addresses.select(Users_addresses.id, Users_addresses.address_string,
                                                 Users_addresses.phone, Users_addresses.name, Users_addresses.surname,
