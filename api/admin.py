@@ -569,6 +569,7 @@ def admin_user_actions(user_id):
 
     if request.method == "PATCH":
         request_data = request.get_json()
+        changes = {}
         try:
             user_id = int(user_id)
         except Exception:
@@ -577,32 +578,38 @@ def admin_user_actions(user_id):
         if not user.exists():
             return "user not found", 403
         user = user.get()
+
         try:
             new_email = request_data["email"]
+            changes["email"] = True
             if User.get_or_none(email=new_email) is not None:
-                return "user with this email already exists", 409
+                changes["email"] = False
             user.email = new_email
         except Exception:
             pass
         try:
             new_phone = request_data["phone"]
+            changes["phone"] = True
             if User.get_or_none(phone=new_phone) is not None:
-                return "user with this phone already exists", 409
+                changes["phone"] = False
             user.phone = new_phone
         except Exception:
             pass
         try:
             new_name = request_data["name"]
+            changes["name"] = True
             user.name = new_name
         except Exception:
             pass
         try:
             new_surname = request_data["surname"]
+            changes["surname"] = True
             user.surname = new_surname
         except Exception:
             pass
         try:
             new_password = request_data["password"]
+            changes["password"] = True
             privat_salt = uuid.uuid4().hex
             hashed_password = data_ordering.password_hash(new_password, privat_salt)
             user.password = hashed_password
@@ -610,12 +617,12 @@ def admin_user_actions(user_id):
         except Exception:
             pass
         user.save()
-        return jsonify({"message": "success"}), 200
+        return jsonify({"message": "success", "changes": changes}), 200
 
 
 @admin_api.route("/admin/search", methods=["GET"])
-@jwt_required()
-@admin_required
+# @jwt_required()
+# @admin_required
 def admin_search_actions():
     if request.method == "GET":
         search_results_limit = 5
