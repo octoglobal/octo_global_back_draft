@@ -47,17 +47,15 @@ def user_data():
             return "user not found", 403
         user = user.get()
         request_data = request.get_json()
-        for patch_key in ["name", "surname", "phone"]:
-            try:
-                patch_data = str(request_data[patch_key])
-                if patch_key == "name":
-                    user.name = patch_data
-                elif patch_key == "surname":
-                    user.surname = patch_data
-                elif patch_key == "phone":
-                    user.phone = patch_data
-            except Exception:
-                pass
+
+        try:
+            new_phone = request_data["phone"]
+            if User.get_or_none(phone=new_phone) is not None:
+                return "user with this phone already exists", 409
+            user.phone = new_phone
+        except Exception:
+            pass
+
         user.save()
         return jsonify({"message": "success"}), 200
 

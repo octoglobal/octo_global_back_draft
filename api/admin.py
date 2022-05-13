@@ -577,17 +577,27 @@ def admin_user_actions(user_id):
             return "user not found", 403
         user = user.get()
         try:
-            new_email = request_data["newEmail"]
+            new_email = request_data["email"]
             if User.get_or_none(email=new_email) is not None:
                 return "user with this email already exists", 409
             user.email = new_email
         except Exception:
             pass
         try:
-            new_phone = request_data["newPhone"]
+            new_phone = request_data["phone"]
             if User.get_or_none(phone=new_phone) is not None:
                 return "user with this phone already exists", 409
             user.phone = new_phone
+        except Exception:
+            pass
+        try:
+            new_name = request_data["name"]
+            user.name = new_name
+        except Exception:
+            pass
+        try:
+            new_surname = request_data["surname"]
+            user.surname = new_surname
         except Exception:
             pass
         user.save()
