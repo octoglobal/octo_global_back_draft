@@ -132,6 +132,30 @@ def send_recovery_message(recipient_id, recipient, subject, time, token, name, s
     return send_email(recipient_id, recipient, subject, html)
 
 
+def send_add_balance(recipient_id, recipient, subject, user):
+    html = """
+            <html>
+                <body>
+                    <p>
+                        Заявка на пополнение счета.
+                        <br>
+                        <br>
+                        Пользователь:
+                        <br>
+                        <br>
+                        ФИ: {user_surname} {user_name}
+                        <br>
+                        ID: {user_long_id}
+                        <br>
+                        Email: {user_email}
+                    </p>
+                </body>
+            </html>
+            """.format(user_surname=user["name"], user_name=user["surname"], user_long_id=user["personalAreaId"],
+                       user_email=user["email"])
+    return send_email(recipient_id, recipient, subject, html)
+
+
 def send_order_return(recipient_id, recipient, subject, user, order):
     html = """
             <html>

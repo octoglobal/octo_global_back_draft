@@ -964,3 +964,21 @@ def admin_balance_change():
         except Exception:
             return "balance error", 500
         return jsonify({"message": "success"}), 200
+
+
+@admin_api.route("/admin/user/<user_id>/balance_history", methods=["GET"])
+@jwt_required()
+# @admin_required
+def admin_user_balance_history(user_id):
+
+    if request.method == "GET":
+        try:
+            user_id = int(user_id)
+        except Exception:
+            return "invalid data", 422
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        balance_history = Users_balance_history.select().where(Users_balance_history.userId == user_id)\
+            .order_by(Users_balance_history.id.desc()).limit(50).dicts()
+        return jsonify({"balance_history": list(balance_history)}), 200

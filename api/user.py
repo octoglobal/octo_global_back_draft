@@ -5,7 +5,8 @@ from peewee import fn
 from datetime import datetime
 import math
 import itertools
-from database import User, Users_addresses, Order, Shop, Tag, Tag_of_shops, Review, Post, Post_product, Package
+from database import User, Users_addresses, Order, Shop, Tag, Tag_of_shops, Review, Post, Post_product, Package, \
+    Users_balance_history
 from functions import data_ordering, email_sending
 import config
 
@@ -742,3 +743,35 @@ def send_email_messages(order_action, order_id):
                                                   user_dict, order_dict):
                 return "email send error", 500
         return jsonify({"message": "success"}), 200
+
+
+@user_api.route("/user/send_message/add_balance", methods=["GET"])
+@jwt_required()
+def send_email_add_balance():
+
+    if request.method == "GET":
+        token_data = get_jwt_identity()
+        user_id = token_data["user_id"]
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        user_dict = model_to_dict(user.get())
+        if not email_sending.send_add_balance(0, config.admin_payments_info_email,
+                                              "Octo Global: Оповещение", user_dict):
+            return "email send error", 500
+        return jsonify({"message": "success"}), 200
+
+
+@user_api.route("/user/balance_history", methods=["GET"])
+@jwt_required()
+def user_balance_history():
+
+    if request.method == "GET":
+        token_data = get_jwt_identity()
+        user_id = token_data["user_id"]
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        balance_history = Users_balance_history.select().where(Users_balance_history.userId == user_id)\
+            .order_by(Users_balance_history.id.desc()).limit(50).dicts()
+        return jsonify({"balance_history": list(balance_history)}), 200
