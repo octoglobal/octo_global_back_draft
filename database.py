@@ -34,6 +34,7 @@ class User(BaseModel):
     registrationTime = DateTimeField(column_name="registration_time", null=True)
     lastLoginTime = DateTimeField(column_name="last_login_time", null=True)
     deletedTime = DateTimeField(column_name="deleted_time", null=True)
+    balance = IntegerField(column_name="balance", null=True)
 
     class Meta:
         table_name = "users"
@@ -90,6 +91,17 @@ class Users_addresses(BaseModel):
 
     class Meta:
         table_name = "users_addresses"
+
+
+class Users_balance_history(BaseModel):
+    id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
+    userId = IntegerField(column_name="user_id")
+    amount = IntegerField(column_name="amount")
+    comment = TextField(column_name="comment", null=True)
+    createdTime = DateTimeField(column_name="created_time", null=True)
+
+    class Meta:
+        table_name = "users_balance_history"
 
 
 class Post(BaseModel):

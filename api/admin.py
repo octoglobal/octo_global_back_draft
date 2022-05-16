@@ -5,7 +5,8 @@ from playhouse.shortcuts import model_to_dict
 import json
 import uuid
 from datetime import datetime
-from database import Shop, Tag_of_shops, Tag, Review, Post, Post_product, User, Order, Package, Users_addresses
+from database import Shop, Tag_of_shops, Tag, Review, Post, Post_product, User, Order, Package, \
+    Users_addresses, Users_balance_history
 from functions import images_func, data_ordering, email_sending
 
 admin_api = Blueprint("admin_api", __name__)
@@ -925,3 +926,41 @@ def admin_orders_sent_info():
         except Exception as e:
             print(e)
             return "packages loading error", 500
+
+
+@admin_api.route("/admin/user/balance", methods=["POST"])
+@jwt_required()
+@admin_required
+def admin_balance_change():
+
+    if request.method == "POST":
+        request_data = request.get_json()
+        try:
+            user_id = int(request_data["userId"])
+            amount = int(request_data["amount"])
+            comment = str(request_data["comment"])
+        except Exception:
+            return "invalid data", 422
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        try:
+            user = user.get()
+            if user.balance is None:
+                new_balance = amount
+            else:
+                new_balance = user.balance + amount
+            user.balance = new_balance
+            if new_balance < 0:
+                return "insufficient funds in the account", 400
+
+            user.save()
+            Users_balance_history.create(
+                userId=user_id,
+                amount=amount,
+                comment=comment,
+                createdTime=datetime.now()
+            )
+        except Exception:
+            return "balance error", 500
+        return jsonify({"message": "success"}), 200

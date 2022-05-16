@@ -30,7 +30,8 @@ def get_user_enough_data(user):
         "photo",
         "username",
         "registrationTime",
-        "lastLoginTime"]
+        "lastLoginTime",
+        "balance"]
     for key in enough_keys:
         enough_user_data[key] = user[key]
     return enough_user_data
