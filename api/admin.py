@@ -931,8 +931,8 @@ def admin_orders_sent_info():
 
 
 @admin_api.route("/admin/user/balance", methods=["POST"])
-@jwt_required()
-@admin_required
+# @jwt_required()
+# @admin_required
 def admin_balance_change():
 
     if request.method == "POST":
@@ -955,7 +955,7 @@ def admin_balance_change():
             user.balance = new_balance
             if new_balance < 0:
                 return "insufficient funds in the account", 400
-
+            print(user.balance)
             user.save()
             Users_balance_history.create(
                 userId=user_id,
@@ -963,7 +963,8 @@ def admin_balance_change():
                 comment=comment,
                 createdTime=datetime.now()
             )
-        except Exception:
+        except Exception as e:
+            print(e)
             return "balance error", 500
         return jsonify({"message": "success"}), 200
 
@@ -987,8 +988,8 @@ def admin_user_balance_history(user_id):
 
 
 @admin_api.route("/admin/users_table", methods=["GET"])
-# @jwt_required()
-# @admin_required
+@jwt_required()
+@admin_required
 def admin_get_table():
 
     if request.method == "GET":
@@ -1019,7 +1020,7 @@ def admin_get_table():
             worksheet.write(row, 2, user["phone"])
             worksheet.write(row, 3, user["name"])
             worksheet.write(row, 4, user["surname"])
-            worksheet.write(row, 5, user["balance"])
+            worksheet.write(row, 5, float('{:.2f}'.format(int(user["balance"]) / 100)))
             try:
                 worksheet.write(row, 6, user["registrationTime"].strftime("%m/%d/%Y, %H:%M"))
             except Exception:

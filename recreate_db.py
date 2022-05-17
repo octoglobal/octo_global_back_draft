@@ -9,7 +9,8 @@ tables = []
 db.drop_tables(tables)
 db.create_tables(tables)
 
-Shop.update(rating=1).execute()
+# Shop.update(rating=1).execute()
+# User.update(balance=None).execute()
 
 admin = User.select().where(User.email == "octoglobal@2083492octoglobal")
 if admin.exists():

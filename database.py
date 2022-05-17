@@ -34,7 +34,7 @@ class User(BaseModel):
     registrationTime = DateTimeField(column_name="registration_time", null=True)
     lastLoginTime = DateTimeField(column_name="last_login_time", null=True)
     deletedTime = DateTimeField(column_name="deleted_time", null=True)
-    balance = IntegerField(column_name="balance", null=True)
+    balance = BigIntegerField(column_name="balance", null=True)
 
     class Meta:
         table_name = "users"
