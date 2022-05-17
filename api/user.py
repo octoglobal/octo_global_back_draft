@@ -439,10 +439,13 @@ def shop_info():
             search_string = str(args["search_suggestions"][0])
             search_results_limit = 3
             search_shops_startswith = Shop.select(Shop.title, Shop.url)\
-                .where(Shop.title.startswith(search_string)).limit(search_results_limit).order_by(Shop.title)
+                .where(Shop.title.startswith(search_string))\
+                .limit(search_results_limit)\
+                .order_by(Shop.rating.desc(), Shop.title)
             search_shops_contains = Shop.select(Shop.title, Shop.url)\
                 .where(Shop.title.contains(search_string), ~(Shop.title.startswith(search_string)))\
-                .limit(search_results_limit - len(search_shops_startswith)).order_by(Shop.title)
+                .limit(search_results_limit - len(search_shops_startswith))\
+                .order_by(Shop.rating.desc(), Shop.title)
             search_results = list(search_shops_startswith.dicts()) + list(search_shops_contains.dicts())
             return jsonify({"search_suggestions_results": search_results}), 200
         except Exception:
@@ -452,10 +455,13 @@ def shop_info():
             search_string = str(args["search"][0])
             search_results_limit = 12
             search_shops_startswith = Shop.select()\
-                .where(Shop.title.startswith(search_string)).limit(search_results_limit).order_by(Shop.title)
+                .where(Shop.title.startswith(search_string))\
+                .limit(search_results_limit)\
+                .order_by(Shop.rating.desc(), Shop.title)
             search_shops_contains = Shop.select()\
                 .where(Shop.title.contains(search_string), ~(Shop.title.startswith(search_string)))\
-                .limit(search_results_limit - len(search_shops_startswith)).order_by(Shop.title)
+                .limit(search_results_limit - len(search_shops_startswith))\
+                .order_by(Shop.rating.desc(), Shop.title)
             shops_tags = Tag_of_shops.select(Tag_of_shops.shop_id, Tag_of_shops.tag_id, Tag.title)\
                 .where(Tag_of_shops.shop_id << search_shops_startswith | Tag_of_shops.shop_id << search_shops_contains)\
                 .join(Tag, on=(Tag_of_shops.tag_id == Tag.id))
@@ -472,12 +478,20 @@ def shop_info():
             pass
         offset = (page - 1) * page_limit
         if len(db_tags) > 0:
-            shops = Shop.select().offset(offset).limit(page_limit).where(Tag_of_shops.tag_id << db_tags)\
-                .join(Tag_of_shops, on=(Shop.id == Tag_of_shops.shop_id)).order_by(Shop.title).group_by(Shop.id)
+            shops = Shop.select().where(Tag_of_shops.tag_id << db_tags)\
+                .join(Tag_of_shops, on=(Shop.id == Tag_of_shops.shop_id))\
+                .order_by(Shop.rating.desc(), Shop.title)\
+                .group_by(Shop.id)\
+                .offset(offset)\
+                .limit(page_limit)
         else:
-            shops = Shop.select().offset(offset).limit(page_limit).order_by(Shop.title)
+            shops = Shop.select()\
+                .order_by(Shop.rating.desc(), Shop.title)
         shops_tags = Tag_of_shops.select(Tag_of_shops.shop_id, Tag_of_shops.tag_id, Tag.title)\
-            .where(Tag_of_shops.shop_id << shops).join(Tag, on=(Tag_of_shops.tag_id == Tag.id))
+            .where(Tag_of_shops.shop_id << shops)\
+            .join(Tag, on=(Tag_of_shops.tag_id == Tag.id))\
+            .offset(offset)\
+            .limit(page_limit)
         for shop in shops:
             shop_tags_list = []
             for shop_tag in shops_tags:

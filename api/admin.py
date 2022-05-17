@@ -1,7 +1,9 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from functools import wraps
 from playhouse.shortcuts import model_to_dict
+import xlsxwriter
+import io
 import json
 import uuid
 from datetime import datetime
@@ -968,7 +970,7 @@ def admin_balance_change():
 
 @admin_api.route("/admin/user/<user_id>/balance_history", methods=["GET"])
 @jwt_required()
-# @admin_required
+@admin_required
 def admin_user_balance_history(user_id):
 
     if request.method == "GET":
@@ -982,3 +984,53 @@ def admin_user_balance_history(user_id):
         balance_history = Users_balance_history.select().where(Users_balance_history.userId == user_id)\
             .order_by(Users_balance_history.id.desc()).limit(50).dicts()
         return jsonify({"balance_history": list(balance_history)}), 200
+
+
+@admin_api.route("/admin/users_table", methods=["GET"])
+# @jwt_required()
+# @admin_required
+def admin_get_table():
+
+    if request.method == "GET":
+        row = 0
+        users = list(User.select().where(User.statusId != 9).order_by(User.id).dicts())
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+        worksheet = workbook.add_worksheet("Users")
+        worksheet.write(row, 0, "Account №")
+        worksheet.write(row, 1, "Email")
+        worksheet.write(row, 2, "Phone")
+        worksheet.write(row, 3, "Name")
+        worksheet.write(row, 4, "Surname")
+        worksheet.write(row, 5, "Balance")
+        worksheet.write(row, 6, "Registration time")
+        worksheet.write(row, 7, "Last login time")
+        worksheet.set_column(0, 0, 10)
+        worksheet.set_column(1, 1, 30)
+        worksheet.set_column(2, 4, 20)
+        worksheet.set_column(5, 5, 10)
+        worksheet.set_column(6, 7, 20)
+        row += 1
+        for user in users:
+            if user["balance"] is None:
+                user["balance"] = 0
+            worksheet.write(row, 0, user["personalAreaId"])
+            worksheet.write(row, 1, user["email"])
+            worksheet.write(row, 2, user["phone"])
+            worksheet.write(row, 3, user["name"])
+            worksheet.write(row, 4, user["surname"])
+            worksheet.write(row, 5, user["balance"])
+            try:
+                worksheet.write(row, 6, user["registrationTime"].strftime("%m/%d/%Y, %H:%M"))
+            except Exception:
+                worksheet.write(row, 6, user["registrationTime"])
+            try:
+                worksheet.write(row, 7, user["lastLoginTime"].strftime("%m/%d/%Y, %H:%M"))
+            except Exception:
+                worksheet.write(row, 7, user["lastLoginTime"])
+            row += 1
+        workbook.close()
+        output.seek(0)
+        # output.close()
+        return send_file(output, as_attachment=True, attachment_filename="Octo Global users.xlsx",
+                         mimetype="application/vnd.ms-excel")

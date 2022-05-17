@@ -146,6 +146,7 @@ class Shop(BaseModel):
     photo = TextField(column_name="photo", null=True)
     logo = TextField(column_name="logo", null=True)
     url = TextField(column_name="url", null=True)
+    rating = IntegerField(column_name="rating", null=True)
 
     class Meta:
         table_name = "shops"
