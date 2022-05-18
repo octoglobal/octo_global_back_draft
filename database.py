@@ -212,3 +212,12 @@ class Error(BaseModel):
 
     class Meta:
         table_name = "errors"
+
+
+class Exchange_rate(BaseModel):
+    id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
+    currency = TextField(column_name="currency", null=True)
+    value = IntegerField(column_name="value", null=True)
+
+    class Meta:
+        table_name = "exchange_rate"

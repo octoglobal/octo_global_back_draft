@@ -6,7 +6,7 @@ from datetime import datetime
 import math
 import itertools
 from database import User, Users_addresses, Order, Shop, Tag, Tag_of_shops, Review, Post, Post_product, Package, \
-    Users_balance_history
+    Users_balance_history, Exchange_rate
 from functions import data_ordering, email_sending
 import config
 
@@ -778,3 +778,12 @@ def user_balance_history():
         balance_history = Users_balance_history.select().where(Users_balance_history.userId == user_id)\
             .order_by(Users_balance_history.id.desc()).limit(50).dicts()
         return jsonify({"balance_history": list(balance_history)}), 200
+
+
+@user_api.route("/exchange_rate", methods=["GET"])
+def exchange_rate():
+
+    if request.method == "GET":
+        currency = list(Exchange_rate.select(Exchange_rate.currency, Exchange_rate.value).dicts())
+        print(currency)
+        return jsonify({"exchange_rate": currency}), 200

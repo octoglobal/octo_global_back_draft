@@ -8,7 +8,7 @@ import json
 import uuid
 from datetime import datetime
 from database import Shop, Tag_of_shops, Tag, Review, Post, Post_product, User, Order, Package, \
-    Users_addresses, Users_balance_history
+    Users_addresses, Users_balance_history, Exchange_rate
 from functions import images_func, data_ordering, email_sending
 
 admin_api = Blueprint("admin_api", __name__)
@@ -985,6 +985,30 @@ def admin_user_balance_history(user_id):
         balance_history = Users_balance_history.select().where(Users_balance_history.userId == user_id)\
             .order_by(Users_balance_history.id.desc()).limit(50).dicts()
         return jsonify({"balance_history": list(balance_history)}), 200
+
+
+@admin_api.route("/admin/exchange_rate", methods=["POST"])
+@jwt_required()
+@admin_required
+def admin_exchange_rate():
+
+    if request.method == "POST":
+        request_data = request.get_json()
+        try:
+            currency = str(request_data["currency"])
+            value = int(request_data["value"])
+        except Exception:
+            return "invalid data", 422
+        currency = Exchange_rate.select().where(Exchange_rate.currency == currency)
+        if not currency.exists():
+            return "currency not found", 403
+        try:
+            currency = currency.get()
+            currency.value = value
+            currency.save()
+        except Exception:
+            return "currency error", 500
+        return jsonify({"message": "success"}), 200
 
 
 @admin_api.route("/admin/users_table", methods=["GET"])
