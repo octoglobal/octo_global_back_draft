@@ -53,6 +53,7 @@ class Order(BaseModel):
     approvalTime = DateTimeField(column_name="approval_time", null=True)
     declineTime = DateTimeField(column_name="decline_time", null=True)
     addingToPackageTime = DateTimeField(column_name="adding_to_package_time", null=True)
+    invoice_check = BooleanField(column_name="invoice_check", null=True)
 
     class Meta:
         table_name = "orders"

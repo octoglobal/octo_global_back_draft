@@ -1015,6 +1015,65 @@ def admin_exchange_rate():
         return jsonify({"message": "success"}), 200
 
 
+@admin_api.route("/admin/all_expected", methods=["GET"])
+@jwt_required()
+@admin_required
+def admin_all_are_waiting():
+
+    if request.method == "GET":
+        args = request.args.to_dict(flat=False)
+        try:
+            page = int(args["page"][0])
+            if page <= 0:
+                raise
+        except Exception:
+            page = 1
+        try:
+            page_limit = int(args["page_limit"][0])
+            if page_limit <= 0 or page_limit > 100:
+                raise
+        except Exception:
+            page_limit = 30
+        offset = (page - 1) * page_limit
+        all_expected_orders = list(Order.select(Order.id.alias("orderId"), Order.longId.alias("orderLongId"),
+                                                Order.trackNumber.alias("orderTrackNumber"), User.id.alias("userId"),
+                                                Order.invoice_check.alias("orderInvoiceCheck"),
+                                                User.personalAreaId.alias("userPersonalAreaId"),
+                                                User.email.alias("userEmail"), User.name.alias("userName"),
+                                                User.surname.alias("userSurname"))
+                                   .join(User, on=(Order.userId == User.id))
+                                   .where(Order.statusId == 0)
+                                   .order_by(Order.id.desc()).offset(offset).limit(page_limit).dicts())
+        for order in all_expected_orders:
+            if order["orderInvoiceCheck"] is None:
+                order["orderInvoiceCheck"] = False
+        return jsonify({"orders": all_expected_orders}), 200
+
+
+@admin_api.route("/admin/invoice_check", methods=["POST"])
+@jwt_required()
+@admin_required
+def admin_invoice_check():
+
+    if request.method == "POST":
+        request_data = request.get_json()
+        try:
+            order_id = request_data["orderId"]
+            invoice_check = request_data["invoice_check"]
+            if invoice_check not in [True, False]:
+                raise
+        except Exception:
+            return "invalid data", 422
+        invoice_check = bool(invoice_check)
+        order = Order.select().where(Order.id == order_id, Order.statusId == 0)
+        if not order.exists():
+            return "order not found", 403
+        order = order.get()
+        order.invoice_check = invoice_check
+        order.save()
+        return jsonify({"message": "success"}), 200
+
+
 @admin_api.route("/admin/users_table", methods=["GET"])
 @jwt_required()
 @admin_required
