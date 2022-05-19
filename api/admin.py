@@ -982,9 +982,13 @@ def admin_user_balance_history(user_id):
         user = User.select().where(User.id == user_id)
         if not user.exists():
             return "user not found", 403
+        user = user.get()
+        balance = user.balance
+        if balance is None:
+            balance = 0
         balance_history = Users_balance_history.select().where(Users_balance_history.userId == user_id)\
             .order_by(Users_balance_history.id.desc()).limit(50).dicts()
-        return jsonify({"balance_history": list(balance_history)}), 200
+        return jsonify({"balance_history": list(balance_history), "balance": balance}), 200
 
 
 @admin_api.route("/admin/exchange_rate", methods=["POST"])

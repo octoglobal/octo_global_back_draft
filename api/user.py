@@ -777,7 +777,11 @@ def user_balance_history():
             return "user not found", 403
         balance_history = Users_balance_history.select().where(Users_balance_history.userId == user_id)\
             .order_by(Users_balance_history.id.desc()).limit(50).dicts()
-        return jsonify({"balance_history": list(balance_history)}), 200
+        user = user.get()
+        balance = user.balance
+        if balance is None:
+            balance = 0
+        return jsonify({"balance_history": list(balance_history), "balance": balance}), 200
 
 
 @user_api.route("/exchange_rate", methods=["GET"])
