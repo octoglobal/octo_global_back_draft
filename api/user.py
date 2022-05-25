@@ -759,7 +759,7 @@ def send_email_add_balance():
         if not user.exists():
             return "user not found", 403
         user_dict = model_to_dict(user.get())
-        if not email_sending.send_add_balance(0, config.admin_payments_info_email,
+        if not email_sending.send_add_balance(user_dict["id"], config.admin_payments_info_email,
                                               "Octo Global: Оповещение", user_dict):
             return "email send error", 500
         return jsonify({"message": "success"}), 200
@@ -791,3 +791,20 @@ def exchange_rate():
         currency = list(Exchange_rate.select(Exchange_rate.currency, Exchange_rate.value).dicts())
         print(currency)
         return jsonify({"exchange_rate": currency}), 200
+
+
+@user_api.route("/user/send_message/feedback", methods=["POST"])
+def send_email_feedback():
+
+    if request.method == "POST":
+        request_data = request.get_json()
+        try:
+            email = request_data["email"]
+            subject = request_data["subject"]
+        except Exception:
+            return "invalid data", 422
+
+        if not email_sending.send_feedback(0, config.admin_feedback_email,
+                                              "Octo Global: Оповещение", email, subject):
+            return "email send error", 500
+        return jsonify({"message": "success"}), 200

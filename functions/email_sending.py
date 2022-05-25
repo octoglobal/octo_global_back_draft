@@ -320,3 +320,26 @@ def send_package_send(recipient_id, recipient, subject, name, surname, package_n
             </html>
             """.format(name=name, surname=surname, package_number=package_number, package_address=package_address)
     return send_email(recipient_id, recipient, subject, html)
+
+
+def send_feedback(recipient_id, recipient, subject, email, question):
+    html = """
+            <html>
+                <body>
+                    <p>
+                        Вопрос от посетителя:
+                        <br>
+                        <br>
+                        Email для обратной связи:
+                        <br>
+                        {email}
+                        <br>
+                        <br>
+                        Вопрос:
+                        <br>
+                        {question}
+                    </p>
+                </body>
+            </html>
+            """.format(email=email, question=question)
+    return send_email(recipient_id, recipient, subject, html)
