@@ -133,26 +133,50 @@ def send_recovery_message(recipient_id, recipient, subject, time, token, name, s
 
 
 def send_add_balance(recipient_id, recipient, subject, user):
-    html = """
-            <html>
-                <body>
-                    <p>
-                        Заявка на пополнение счета.
-                        <br>
-                        <br>
-                        Пользователь:
-                        <br>
-                        <br>
-                        ФИ: {user_surname} {user_name}
-                        <br>
-                        ID: {user_long_id}
-                        <br>
-                        Email: {user_email}
-                    </p>
-                </body>
-            </html>
-            """.format(user_surname=user["name"], user_name=user["surname"], user_long_id=user["personalAreaId"],
-                       user_email=user["email"])
+    if user["phone"]:
+        html = """
+                <html>
+                    <body>
+                        <p>
+                            Заявка на пополнение счета.
+                            <br>
+                            <br>
+                            Пользователь:
+                            <br>
+                            <br>
+                            ФИ: {user_surname} {user_name}
+                            <br>
+                            ID: {user_long_id}
+                            <br>
+                            Email: {user_email}
+                            <br>
+                            Телефон: {user_phone}
+                        </p>
+                    </body>
+                </html>
+                """.format(user_surname=user["name"], user_name=user["surname"], user_long_id=user["personalAreaId"],
+                           user_email=user["email"], user_phone=user["phone"])
+    else:
+        html = """
+                <html>
+                    <body>
+                        <p>
+                            Заявка на пополнение счета.
+                            <br>
+                            <br>
+                            Пользователь:
+                            <br>
+                            <br>
+                            ФИ: {user_surname} {user_name}
+                            <br>
+                            ID: {user_long_id}
+                            <br>
+                            Email: {user_email}
+                        </p>
+                    </body>
+                </html>
+                """.format(user_surname=user["name"], user_name=user["surname"], user_long_id=user["personalAreaId"],
+                           user_email=user["email"])
     return send_email(recipient_id, recipient, subject, html)
 
 
@@ -302,6 +326,27 @@ def send_cancelled_package(recipient_id, recipient, subject, name, surname, pack
     return send_email(recipient_id, recipient, subject, html)
 
 
+def send_delete_package(recipient_id, recipient, subject, name, surname, package_number):
+    html = """
+            <html>
+                <body>
+                    <p>
+                        Здравствуйте, {name} {surname}!
+                        <br>
+                        <br>
+                        Ваша посылка № {package_number} удалена администратором. 
+                        Для того, чтобы получить подробную информацию об отмене, свяжитесь с нами по почте
+                        help@octo.global
+                        <br>
+                        <br>
+                        С уважением octo global.
+                    </p>
+                </body>
+            </html>
+            """.format(name=name, surname=surname, package_number=package_number)
+    return send_email(recipient_id, recipient, subject, html)
+
+
 def send_package_send(recipient_id, recipient, subject, name, surname, package_number, package_address):
     html = """
             <html>
@@ -310,7 +355,7 @@ def send_package_send(recipient_id, recipient, subject, name, surname, package_n
                         Здравствуйте, {name} {surname}!
                         <br>
                         <br>
-                        Ваша посылка № {package_number} заказа отправлена в Россию по адресу:
+                        Ваша посылка № {package_number} отправлена в Россию по адресу:
                         {package_address} 
                         <br>
                         <br>

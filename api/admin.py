@@ -302,7 +302,7 @@ def admin_orders_actions():
         return jsonify({"message": "success"}), 200
 
 
-@admin_api.route("/admin/packages", methods=["POST", "DELETE", "PATCH"])
+@admin_api.route("/admin/packages", methods=["POST", "DELETE"])
 @jwt_required()
 @admin_required
 def admin_packages_actions():
@@ -401,8 +401,10 @@ def admin_package_with_orders_actions():
         user = User.select().where(User.id == user_id)
         if not user.exists():
             return "user not found", 403
+        user = user.get()
         package = Package.select() \
             .where(Package.id == package_id, Package.userId == user_id)
+        packageLongId = package.get().longId
         if not package.exists():
             return "package not found", 403
         user_orders = Order.select() \
@@ -414,6 +416,8 @@ def admin_package_with_orders_actions():
             .join(Package, on=(Order.packageId == Package.id))
         Order.delete().where(Order.id << user_orders).execute()
         package.get().delete_instance()
+        email_sending.send_cancelled_package(user_id, user.email, "Octo Global: Оповещение",
+                                             user.name, user.surname, packageLongId)
         return jsonify({"message": "success"}), 200
 
 
@@ -626,8 +630,8 @@ def admin_user_actions(user_id):
 
 
 @admin_api.route("/admin/search", methods=["GET"])
-# @jwt_required()
-# @admin_required
+@jwt_required()
+@admin_required
 def admin_search_actions():
     if request.method == "GET":
         search_results_limit = 5
@@ -931,8 +935,8 @@ def admin_orders_sent_info():
 
 
 @admin_api.route("/admin/user/balance", methods=["POST"])
-# @jwt_required()
-# @admin_required
+@jwt_required()
+@admin_required
 def admin_balance_change():
 
     if request.method == "POST":

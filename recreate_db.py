@@ -4,7 +4,11 @@ from datetime import datetime
 
 now = datetime.now()
 # tables = [User, Order, Post, Shop, Error, Email_message, Users_addresses, Package, Tag_of_shops, Tag]
+# tables = [Order, Post, Package, Review, Post_product, Users_balance_history]
+# query = User.update(balance=0)
+# query.execute()
 tables = []
+
 
 db.drop_tables(tables)
 db.create_tables(tables)
