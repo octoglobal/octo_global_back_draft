@@ -416,7 +416,7 @@ def admin_package_with_orders_actions():
             .join(Package, on=(Order.packageId == Package.id))
         Order.delete().where(Order.id << user_orders).execute()
         package.get().delete_instance()
-        email_sending.send_cancelled_package(user_id, user.email, "Octo Global: Оповещение",
+        email_sending.send_delete_package(user_id, user.email, "Octo Global: Оповещение",
                                              user.name, user.surname, packageLongId)
         return jsonify({"message": "success"}), 200
 
