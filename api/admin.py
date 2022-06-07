@@ -959,7 +959,6 @@ def admin_balance_change():
             user.balance = new_balance
             if new_balance < 0:
                 return "insufficient funds in the account", 400
-            print(user.balance)
             user.save()
             Users_balance_history.create(
                 userId=user_id,
@@ -973,7 +972,7 @@ def admin_balance_change():
         return jsonify({"message": "success"}), 200
 
 
-@admin_api.route("/admin/user/<user_id>/balance_history", methods=["GET"])
+@admin_api.route("/admin/user/<user_id>/balance_history", methods=["GET", "DELETE"])
 @jwt_required()
 @admin_required
 def admin_user_balance_history(user_id):
@@ -993,6 +992,35 @@ def admin_user_balance_history(user_id):
         balance_history = Users_balance_history.select().where(Users_balance_history.userId == user_id)\
             .order_by(Users_balance_history.id.desc()).limit(50).dicts()
         return jsonify({"balance_history": list(balance_history), "balance": balance}), 200
+
+
+@admin_api.route("/admin/user/<user_id>/balance_history/<operation_id>", methods=["DELETE"])
+@jwt_required()
+@admin_required
+def admin_user_balance_history_delete_operation(user_id, operation_id):
+
+    if request.method == "DELETE":
+        try:
+            user_id = int(user_id)
+            operation_id = int(operation_id)
+        except Exception:
+            return "invalid data", 422
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        operation = Users_balance_history.select().where(Users_balance_history.id == operation_id,
+                                                         Users_balance_history.userId == user_id)
+        if not operation.exists():
+            return "operation not found", 403
+        operation = operation.get()
+        user = user.get()
+        new_balance = user.balance - operation.amount
+        if new_balance < 0:
+            return "insufficient funds in the account", 400
+        user.balance = new_balance
+        user.save()
+        operation.delete_instance()
+        return jsonify({"message": "success"}), 200
 
 
 @admin_api.route("/admin/exchange_rate", methods=["POST"])
