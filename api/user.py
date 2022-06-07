@@ -821,7 +821,7 @@ def send_email_wont_consolidation_address(address):
         if not user.exists():
             return "user not found", 403
         user_dict = model_to_dict(user.get())
-        if not email_sending.send_user_wont_address(user_dict["id"], config.admin_payments_info_email,
+        if not email_sending.send_user_wont_address(user_dict["id"], config.admin_delivery_info_email,
                                                     "Octo Global: Оповещение", user_dict, address):
             return "email send error", 500
         return jsonify({"message": "success"}), 200
