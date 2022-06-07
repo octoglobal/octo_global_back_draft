@@ -808,3 +808,20 @@ def send_email_feedback():
                                               "Octo Global: Оповещение", email, subject):
             return "email send error", 500
         return jsonify({"message": "success"}), 200
+
+
+@user_api.route("/user/send_message/wont_consolidation_address/<address>", methods=["GET"])
+@jwt_required()
+def send_email_wont_consolidation_address(address):
+
+    if request.method == "GET":
+        token_data = get_jwt_identity()
+        user_id = token_data["user_id"]
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        user_dict = model_to_dict(user.get())
+        if not email_sending.send_user_wont_address(user_dict["id"], config.admin_payments_info_email,
+                                                    "Octo Global: Оповещение", user_dict, address):
+            return "email send error", 500
+        return jsonify({"message": "success"}), 200

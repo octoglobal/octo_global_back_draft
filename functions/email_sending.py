@@ -388,3 +388,51 @@ def send_feedback(recipient_id, recipient, subject, email, question):
             </html>
             """.format(email=email, question=question)
     return send_email(recipient_id, recipient, subject, html)
+
+
+def send_user_wont_address(recipient_id, recipient, subject, user, address):
+    if user["phone"]:
+        html = """
+                <html>
+                    <body>
+                        <p>
+                            Заявка на отправку адреса консолидации ({address}).
+                            <br>
+                            <br>
+                            Пользователь:
+                            <br>
+                            <br>
+                            ФИ: {user_surname} {user_name}
+                            <br>
+                            ID: {user_long_id}
+                            <br>
+                            Email: {user_email}
+                            <br>
+                            Телефон: {user_phone}
+                        </p>
+                    </body>
+                </html>
+                """.format(user_surname=user["name"], user_name=user["surname"], user_long_id=user["personalAreaId"],
+                           user_email=user["email"], user_phone=user["phone"], address=address)
+    else:
+        html = """
+                <html>
+                    <body>
+                        <p>
+                            Заявка на отправку адреса консолидации ({address}).
+                            <br>
+                            <br>
+                            Пользователь:
+                            <br>
+                            <br>
+                            ФИ: {user_surname} {user_name}
+                            <br>
+                            ID: {user_long_id}
+                            <br>
+                            Email: {user_email}
+                        </p>
+                    </body>
+                </html>
+                """.format(user_surname=user["name"], user_name=user["surname"], user_long_id=user["personalAreaId"],
+                           user_email=user["email"], address=address)
+    return send_email(recipient_id, recipient, subject, html)
