@@ -436,3 +436,62 @@ def send_user_wont_address(recipient_id, recipient, subject, user, address):
                 """.format(user_surname=user["name"], user_name=user["surname"], user_long_id=user["personalAreaId"],
                            user_email=user["email"], address=address)
     return send_email(recipient_id, recipient, subject, html)
+
+
+def send_user_wont_redemption_of_goods(recipient_id, recipient, subject, user, goods_url, goods_count):
+    if user["phone"]:
+        html = """
+                <html>
+                    <body>
+                        <p>
+                            Заявка на выкуп товара.
+                            <br>
+                            <br>
+                            Ссылка на отвар: {goods_url}
+                            <br>
+                            Количество: {goods_count}
+                            <br>
+                            <br>
+                            Пользователь:
+                            <br>
+                            <br>
+                            ФИ: {user_surname} {user_name}
+                            <br>
+                            ID: {user_long_id}
+                            <br>
+                            Email: {user_email}
+                            <br>
+                            Телефон: {user_phone}
+                        </p>
+                    </body>
+                </html>
+                """.format(user_surname=user["name"], user_name=user["surname"], user_long_id=user["personalAreaId"],
+                           user_email=user["email"], user_phone=user["phone"],
+                           goods_url=goods_url, goods_count=goods_count)
+    else:
+        html = """
+                <html>
+                    <body>
+                        <p>
+                            Заявка на выкуп товара.
+                            <br>
+                            <br>
+                            Ссылка на отвар: {goods_url}
+                            <br>
+                            Количество: {goods_count}
+                            <br>
+                            <br>
+                            Пользователь:
+                            <br>
+                            <br>
+                            ФИ: {user_surname} {user_name}
+                            <br>
+                            ID: {user_long_id}
+                            <br>
+                            Email: {user_email}
+                        </p>
+                    </body>
+                </html>
+                """.format(user_surname=user["name"], user_name=user["surname"], user_long_id=user["personalAreaId"],
+                           user_email=user["email"], goods_url=goods_url, goods_count=goods_count)
+    return send_email(recipient_id, recipient, subject, html)

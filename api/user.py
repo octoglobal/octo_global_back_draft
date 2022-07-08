@@ -825,3 +825,27 @@ def send_email_wont_consolidation_address(address):
                                                     "Octo Global: Оповещение", user_dict, address):
             return "email send error", 500
         return jsonify({"message": "success"}), 200
+
+
+@user_api.route("/user/send_message/redemption_of_goods", methods=["POST"])
+@jwt_required()
+def send_email_redemption_of_goods():
+
+    if request.method == "POST":
+        token_data = get_jwt_identity()
+        user_id = token_data["user_id"]
+        user = User.select().where(User.id == user_id)
+        if not user.exists():
+            return "user not found", 403
+        user_dict = model_to_dict(user.get())
+        request_data = request.get_json()
+        try:
+            goods_count = request_data["count"]
+            goods_url = request_data["url"]
+        except Exception:
+            return "invalid data", 422
+        if not email_sending.send_user_wont_redemption_of_goods(user_dict["id"], config.admin_payments_info_email,
+                                                                "Octo Global: Оповещение", user_dict,
+                                                                goods_url, goods_count):
+            return "email send error", 500
+        return jsonify({"message": "success"}), 200
