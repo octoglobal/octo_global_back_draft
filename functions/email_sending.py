@@ -447,7 +447,7 @@ def send_user_wont_redemption_of_goods(recipient_id, recipient, subject, user, g
                             Заявка на выкуп товара.
                             <br>
                             <br>
-                            Ссылка на отвар: {goods_url}
+                            Ссылка на товар: {goods_url}
                             <br>
                             Количество: {goods_count}
                             <br>
@@ -476,7 +476,7 @@ def send_user_wont_redemption_of_goods(recipient_id, recipient, subject, user, g
                             Заявка на выкуп товара.
                             <br>
                             <br>
-                            Ссылка на отвар: {goods_url}
+                            Ссылка на товар: {goods_url}
                             <br>
                             Количество: {goods_count}
                             <br>
