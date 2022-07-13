@@ -957,8 +957,8 @@ def admin_balance_change():
             else:
                 new_balance = user.balance + amount
             user.balance = new_balance
-            if new_balance < 0:
-                return "insufficient funds in the account", 400
+            # if new_balance < 0:
+            #     return "insufficient funds in the account", 400
             user.save()
             Users_balance_history.create(
                 userId=user_id,
@@ -1015,8 +1015,8 @@ def admin_user_balance_history_delete_operation(user_id, operation_id):
         operation = operation.get()
         user = user.get()
         new_balance = user.balance - operation.amount
-        if new_balance < 0:
-            return "insufficient funds in the account", 400
+        # if new_balance < 0:
+        #     return "insufficient funds in the account", 400
         user.balance = new_balance
         user.save()
         operation.delete_instance()
