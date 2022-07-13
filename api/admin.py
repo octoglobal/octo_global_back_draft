@@ -950,25 +950,26 @@ def admin_balance_change():
         user = User.select().where(User.id == user_id)
         if not user.exists():
             return "user not found", 403
+
+
+        user = user.get()
+        if user.balance is None:
+            new_balance = amount
+        else:
+            new_balance = user.balance + amount
+        user.balance = new_balance
+        # if new_balance < 0:
+        #     return "insufficient funds in the account", 400
         try:
-            user = user.get()
-            if user.balance is None:
-                new_balance = amount
-            else:
-                new_balance = user.balance + amount
-            user.balance = new_balance
-            # if new_balance < 0:
-            #     return "insufficient funds in the account", 400
-            user.save()
             Users_balance_history.create(
                 userId=user_id,
                 amount=amount,
                 comment=comment,
                 createdTime=datetime.now()
             )
-        except Exception as e:
-            print(e)
+        except Exception:
             return "balance error", 500
+        user.save()
         return jsonify({"message": "success"}), 200
 
 

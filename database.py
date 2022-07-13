@@ -97,7 +97,7 @@ class Users_addresses(BaseModel):
 class Users_balance_history(BaseModel):
     id = PrimaryKeyField(column_name="id", primary_key=True, unique=True)
     userId = IntegerField(column_name="user_id")
-    amount = IntegerField(column_name="amount")
+    amount = BigIntegerField(column_name="amount")
     comment = TextField(column_name="comment", null=True)
     createdTime = DateTimeField(column_name="created_time", null=True)
 
