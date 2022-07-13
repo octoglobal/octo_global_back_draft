@@ -967,9 +967,9 @@ def admin_balance_change():
                 comment=comment,
                 createdTime=datetime.now()
             )
+            user.save()
         except Exception:
             return "balance error", 500
-        user.save()
         return jsonify({"message": "success"}), 200
 
 
