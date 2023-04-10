@@ -63,8 +63,9 @@ def registration():
             )
         except Exception:
             return "internal server error", 500
-        if not email_sending.send_welcome_message(new_user.id, email, "Добро пожаловать в Octo Global!",
-                                                  email_token, name, surname):
+        email_result = email_sending.send_welcome_message(new_user.id, email, "Добро пожаловать в Octo Global!",
+                                                          email_token, name, surname)
+        if not email_result:
             return jsonify({"message": "user successfully created", "sendEmail": False}), 201
         return jsonify({"message": "user successfully created", "sendEmail": True}), 201
 

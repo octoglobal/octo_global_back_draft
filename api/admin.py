@@ -1069,6 +1069,7 @@ def admin_all_are_waiting():
             page_limit = 30
         offset = (page - 1) * page_limit
         all_expected_orders = list(Order.select(Order.id.alias("orderId"), Order.longId.alias("orderLongId"),
+                                                Order.title.alias("orderTitle"),
                                                 Order.trackNumber.alias("orderTrackNumber"), User.id.alias("userId"),
                                                 Order.invoice_check.alias("orderInvoiceCheck"),
                                                 User.personalAreaId.alias("userPersonalAreaId"),
